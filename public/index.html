@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Corridor 9 | Merchant Portal</title>
+  <title>Corridor 9 | Merchant Freight Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
     :root {
@@ -24,25 +23,25 @@
       --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; padding: 24px 16px; }
     .container { max-width: 1080px; margin: 0 auto; }
 
     /* Top Nav */
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-icon { width: 42px; height: 42px; background: linear-gradient(135deg, #0f172a, #2563eb); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+    .brand-icon { width: 42px; height: 42px; background: linear-gradient(135deg, #0f172a, #2563eb); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
     .brand-title { font-size: 20px; font-weight: 800; color: var(--primary); }
     
     /* Auth Modal / Card */
-    .auth-wrapper { max-width: 440px; margin: 60px auto; }
+    .auth-wrapper { max-width: 440px; margin: 40px auto; }
     .auth-card { background: white; padding: 32px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
     .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
     .auth-tab-btn { background: none; border: none; font-size: 15px; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 8px 12px; }
     .auth-tab-btn.active { color: var(--brand); border-bottom: 2px solid var(--brand); }
 
     /* Dashboard Layout */
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .stat-card { background: white; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
     .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
     .stat-value { font-size: 28px; font-weight: 800; color: var(--primary); margin-top: 6px; }
@@ -61,8 +60,9 @@
 
     .btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
     .btn-primary { background: var(--brand); color: white; }
+    .btn-primary:hover { background: var(--brand-hover); }
     .btn-outline { background: transparent; border: 1.5px solid var(--border); color: #334155; }
-    .btn-logout { background: #fee2e2; color: #991b1b; padding: 6px 14px; font-size: 12px; border-radius: 6px; width: auto; font-weight: 600; cursor: pointer; border: none; }
+    .btn-logout { background: #fee2e2; color: #991b1b; padding: 8px 14px; font-size: 12px; border-radius: 6px; width: auto; font-weight: 700; cursor: pointer; border: none; }
 
     /* Tables */
     table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
@@ -99,7 +99,7 @@
         <strong id="headerUserName" style="font-size:14px;">Merchant</strong><br>
         <span id="headerCustomerId" style="font-size:11px; color:var(--text-muted); font-family:monospace;">C9-CUST-XXXX</span>
       </div>
-      <button class="btn-logout" onclick="logout()"><i data-lucide="log-out"></i> Sign Out</button>
+      <button class="btn-logout" onclick="logout()">Sign Out</button>
     </div>
   </header>
 
@@ -121,7 +121,7 @@
           <label>Password</label>
           <input type="password" id="loginPassword" required placeholder="••••••••" />
         </div>
-        <button type="submit" class="btn btn-primary" style="margin-top:16px;">Sign In to Dashboard</button>
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="margin-top:16px;">Sign In to Dashboard</button>
       </form>
 
       <!-- Register Form -->
@@ -146,7 +146,7 @@
           <label>Create Password</label>
           <input type="password" id="regPassword" required placeholder="••••••••" />
         </div>
-        <button type="submit" class="btn btn-primary" style="margin-top:16px;">Register & Get ₹2,000 Bonus</button>
+        <button type="submit" id="registerSubmitBtn" class="btn btn-primary" style="margin-top:16px;">Register & Get ₹2,000 Bonus</button>
       </form>
 
       <div id="authAlert"></div>
@@ -185,7 +185,7 @@
             <label>Recharge Amount (₹)</label>
             <input type="number" id="topupAmt" value="5000" step="500" />
           </div>
-          <button class="btn btn-outline" onclick="topupWallet()"><i data-lucide="plus-circle"></i> Add Funds</button>
+          <button class="btn btn-outline" onclick="topupWallet()">Add Funds</button>
           <div id="walletAlert"></div>
         </div>
 
@@ -194,7 +194,7 @@
           <div style="max-height: 250px; overflow-y: auto;">
             <table id="txnTable">
               <thead>
-                <tr><th>Txn</th><th>Description</th><th>Amount</th></tr>
+                <tr><th>Type</th><th>Description</th><th>Amount</th></tr>
               </thead>
               <tbody></tbody>
             </table>
@@ -251,24 +251,24 @@
             Estimated Total Freight (incl. GST): <strong id="quoteDisplay" style="color:var(--brand);">₹888</strong>
           </div>
 
-          <button class="btn btn-primary" onclick="createBooking()"><i data-lucide="check-circle-2"></i> Book & Deduct Freight</button>
+          <button class="btn btn-primary" onclick="createBooking()">Book & Deduct Freight</button>
           <div id="bookingResult"></div>
         </div>
       </div>
     </div>
 
-    <!-- BOOKING LABELS POPUP CONTAINER -->
+    <!-- BOOKING LABELS CONTAINER -->
     <div id="labelsContainer" class="card" style="display:none;">
       <div class="card-title">
         <span>Ready-to-Print Thermal Labels</span>
-        <button class="btn btn-outline" style="width:auto; padding:6px 14px;" onclick="window.print()">🖨️ Print Labels</button>
+        <button class="btn btn-outline" style="width:auto; padding:6px 14px;" onclick="window.print()">Print Labels</button>
       </div>
       <div id="labelsOutput" class="labels-grid"></div>
     </div>
 
     <!-- RECENT SHIPMENTS TABLE -->
     <div class="card">
-      <div class="card-title"><span>🚚 My Consignment History</span></div>
+      <div class="card-title"><span>🚚 Consignment History</span></div>
       <div style="overflow-x:auto;">
         <table id="docketsTable">
           <thead>
@@ -289,11 +289,15 @@
 </div>
 
 <script>
-  let currentUser = JSON.parse(localStorage.getItem('c9_user')) || null;
+  let currentUser = null;
+  try {
+    currentUser = JSON.parse(localStorage.getItem('c9_user'));
+  } catch (e) {
+    currentUser = null;
+  }
 
   function initApp() {
-    lucide.createIcons();
-    if (currentUser) {
+    if (currentUser && currentUser.customer_id) {
       showDashboard();
     } else {
       showAuth();
@@ -305,54 +309,77 @@
     document.getElementById('tabRegisterBtn').className = tab === 'register' ? 'auth-tab-btn active' : 'auth-tab-btn';
     document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
     document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+    document.getElementById('authAlert').innerHTML = '';
   }
 
   async function handleLogin(e) {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginSubmitBtn');
+    btn.innerText = 'Signing in...';
+    btn.disabled = true;
 
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    const alertBox = document.getElementById('authAlert');
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
 
-    if (data.success) {
-      currentUser = data.user;
-      localStorage.setItem('c9_user', JSON.stringify(currentUser));
-      showDashboard();
-    } else {
-      alertBox.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      const alertBox = document.getElementById('authAlert');
+
+      if (data.success && data.user) {
+        currentUser = data.user;
+        localStorage.setItem('c9_user', JSON.stringify(currentUser));
+        showDashboard();
+      } else {
+        alertBox.innerHTML = `<div class="alert alert-error">${data.error || 'Login failed.'}</div>`;
+      }
+    } catch (err) {
+      document.getElementById('authAlert').innerHTML = `<div class="alert alert-error">Network error. Please try again.</div>`;
+    } finally {
+      btn.innerText = 'Sign In to Dashboard';
+      btn.disabled = false;
     }
   }
 
   async function handleRegister(e) {
     e.preventDefault();
+    const btn = document.getElementById('registerSubmitBtn');
+    btn.innerText = 'Creating account...';
+    btn.disabled = true;
+
     const payload = {
-      company: document.getElementById('regCompany').value,
-      name: document.getElementById('regName').value,
-      phone: document.getElementById('regPhone').value,
-      email: document.getElementById('regEmail').value,
-      password: document.getElementById('regPassword').value
+      company: document.getElementById('regCompany').value.trim(),
+      name: document.getElementById('regName').value.trim(),
+      phone: document.getElementById('regPhone').value.trim(),
+      email: document.getElementById('regEmail').value.trim(),
+      password: document.getElementById('regPassword').value.trim()
     };
 
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    const alertBox = document.getElementById('authAlert');
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      const alertBox = document.getElementById('authAlert');
 
-    if (data.success) {
-      currentUser = data.user;
-      localStorage.setItem('c9_user', JSON.stringify(currentUser));
-      showDashboard();
-    } else {
-      alertBox.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+      if (data.success && data.user) {
+        currentUser = data.user;
+        localStorage.setItem('c9_user', JSON.stringify(currentUser));
+        showDashboard();
+      } else {
+        alertBox.innerHTML = `<div class="alert alert-error">${data.error || 'Registration failed.'}</div>`;
+      }
+    } catch (err) {
+      document.getElementById('authAlert').innerHTML = `<div class="alert alert-error">Network error. Please try again.</div>`;
+    } finally {
+      btn.innerText = 'Register & Get ₹2,000 Bonus';
+      btn.disabled = false;
     }
   }
 
@@ -380,41 +407,49 @@
   }
 
   async function refreshDashboardData() {
-    const res = await fetch(`/api/merchant/dashboard/${currentUser.customer_id}`);
-    const data = await res.json();
-    if (!data.success) return;
+    if (!currentUser || !currentUser.customer_id) return;
+    try {
+      const res = await fetch(`/api/merchant/dashboard/${currentUser.customer_id}`);
+      const data = await res.json();
+      if (!data.success) return;
 
-    // Update Stats
-    document.getElementById('statBalance').innerText = `₹${data.stats.wallet_balance}`;
-    document.getElementById('statTotal').innerText = data.stats.total_shipments;
-    document.getElementById('statActive').innerText = data.stats.active_shipments;
-    document.getElementById('statDelivered').innerText = data.stats.delivered_shipments;
+      document.getElementById('statBalance').innerText = `₹${data.stats.wallet_balance}`;
+      document.getElementById('statTotal').innerText = data.stats.total_shipments;
+      document.getElementById('statActive').innerText = data.stats.active_shipments;
+      document.getElementById('statDelivered').innerText = data.stats.delivered_shipments;
 
-    // Update Transactions Table
-    const txnBody = document.querySelector('#txnTable tbody');
-    txnBody.innerHTML = data.transactions.map(t => `
-      <tr>
-        <td><strong style="font-size:11px;">${t.type}</strong></td>
-        <td>${t.description}</td>
-        <td style="color:${t.type === 'FREIGHT_DEDUCT' ? '#dc2626' : '#16a34a'}; font-weight:bold;">
-          ${t.type === 'FREIGHT_DEDUCT' ? '-' : '+'}₹${t.amount}
-        </td>
-      </tr>
-    `).join('') || '<tr><td colspan="3">No transactions yet.</td></tr>';
+      const txnBody = document.querySelector('#txnTable tbody');
+      if (data.transactions && data.transactions.length > 0) {
+        txnBody.innerHTML = data.transactions.map(t => `
+          <tr>
+            <td><strong style="font-size:11px;">${t.type}</strong></td>
+            <td>${t.description}</td>
+            <td style="color:${t.type === 'FREIGHT_DEDUCT' ? '#dc2626' : '#16a34a'}; font-weight:bold;">
+              ${t.type === 'FREIGHT_DEDUCT' ? '-' : '+'}₹${t.amount}
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        txnBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">No transactions yet.</td></tr>';
+      }
 
-    // Update Dockets Table
-    const docketBody = document.querySelector('#docketsTable tbody');
-    docketBody.innerHTML = data.recent_dockets.map(d => `
-      <tr>
-        <td><strong>${d.docket_id}</strong><br><small style="color:#64748b;">${new Date(d.created_at).toLocaleDateString()}</small></td>
-        <td>${d.origin} ➔ ${d.destination}<br><small>${d.consignee_name}</small></td>
-        <td>${d.total_boxes} boxes (${d.chargeable_weight_kg} kg)</td>
-        <td><span class="status-pill status-${d.status.toLowerCase().includes('deliv') ? 'delivered' : d.status.toLowerCase().includes('pick') ? 'picked' : 'created'}">${d.status}</span></td>
-        <td><a href="/api/invoice/${d.docket_id}" target="_blank" style="color:var(--brand); font-weight:bold; text-decoration:none;">📄 Invoice</a></td>
-      </tr>
-    `).join('') || '<tr><td colspan="5">No shipments booked yet.</td></tr>';
-
-    lucide.createIcons();
+      const docketBody = document.querySelector('#docketsTable tbody');
+      if (data.recent_dockets && data.recent_dockets.length > 0) {
+        docketBody.innerHTML = data.recent_dockets.map(d => `
+          <tr>
+            <td><strong>${d.docket_id}</strong><br><small style="color:#64748b;">${new Date(d.created_at).toLocaleDateString()}</small></td>
+            <td>${d.origin} ➔ ${d.destination}<br><small>${d.consignee_name}</small></td>
+            <td>${d.total_boxes} boxes (${d.chargeable_weight_kg} kg)</td>
+            <td><span class="status-pill status-${d.status.toLowerCase().includes('deliv') ? 'delivered' : d.status.toLowerCase().includes('pick') ? 'picked' : 'created'}">${d.status}</span></td>
+            <td><a href="/api/invoice/${d.docket_id}" target="_blank" style="color:var(--brand); font-weight:bold; text-decoration:none;">📄 Invoice</a></td>
+          </tr>
+        `).join('');
+      } else {
+        docketBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8;">No shipments booked yet.</td></tr>';
+      }
+    } catch (err) {
+      console.error('Error loading dashboard:', err);
+    }
   }
 
   function calculateLiveQuote() {
@@ -462,7 +497,7 @@
 
     if (data.success) {
       out.innerHTML = `
-        <div class="alert alert-success" style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="alert alert-success" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
           <span>🎉 <strong>${data.docket_id}</strong> Booked (-₹${data.deducted_amount})</span>
           <a href="/api/invoice/${data.docket_id}" target="_blank" style="background:#0f172a; color:white; padding:6px 12px; border-radius:6px; font-size:12px; text-decoration:none;">📄 Invoice</a>
         </div>`;
@@ -479,11 +514,11 @@
       });
       refreshDashboardData();
     } else {
-      out.innerHTML = `<div class="alert alert-error">❌ ${data.error}</div>`;
+      out.innerHTML = `<div class="alert alert-error" style="margin-top:12px;">❌ ${data.error}</div>`;
     }
-    lucide.createIcons();
   }
 
+  // Initialize
   initApp();
 </script>
 
