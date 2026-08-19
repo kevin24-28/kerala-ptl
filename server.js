@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // ==========================================
-// UNIFIED PORTAL SPA WITH 9-STAGE CHAIN OF CUSTODY
+// UNIFIED PORTAL SPA WITH LIVE CAMERA SCANNER
 // ==========================================
 const unifiedPortalHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -23,6 +23,8 @@ const unifiedPortalHtml = `<!DOCTYPE html>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- HTML5 QR/Barcode Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
       --primary: #0f172a;
@@ -40,13 +42,11 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     body { background-color: var(--bg); color: var(--primary); min-height: 100vh; padding: 20px 14px; }
     .container { max-width: 1200px; margin: 0 auto; }
 
-    /* Top Nav */
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
     .brand { display: flex; align-items: center; gap: 10px; }
     .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #0f172a, #2563eb); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
     .brand-title { font-size: 19px; font-weight: 800; }
 
-    /* Role Cards Gate */
     .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 30px auto 20px; max-width: 900px; }
     .role-card { background: white; border: 2px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
     .role-card:hover { border-color: var(--brand); transform: translateY(-2px); }
@@ -57,7 +57,6 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     .auth-tab-btn { background: none; border: none; font-size: 13px; font-weight: 700; color: #64748b; cursor: pointer; padding: 6px 12px; }
     .auth-tab-btn.active { color: var(--brand); border-bottom: 2px solid var(--brand); }
 
-    /* Form Controls */
     .form-group { margin-bottom: 12px; text-align: left; }
     .form-group label { display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -67,9 +66,9 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     .btn-primary { background: var(--brand); color: white; }
     .btn-dark { background: var(--primary); color: white; }
     .btn-outline { background: transparent; border: 1.5px solid var(--border); color: #334155; }
+    .btn-camera { background: #047857; color: white; margin-bottom: 10px; }
     .btn-logout { background: #fee2e2; color: #991b1b; padding: 6px 12px; font-size: 12px; border-radius: 6px; font-weight: 700; border: none; cursor: pointer; }
 
-    /* Dashboard Layouts */
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
     .stat-card { background: white; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); }
     .stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; }
@@ -79,7 +78,6 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     .card { background: white; border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: var(--shadow); }
     .card-title { font-size: 15px; font-weight: 800; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* Tables */
     table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
     th { background: #f8fafc; text-align: left; padding: 9px; color: #64748b; font-weight: 700; border-bottom: 1px solid var(--border); }
     td { padding: 10px 9px; border-bottom: 1px solid var(--border); vertical-align: middle; }
@@ -92,7 +90,6 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     .st-ofd { background: #fef9c3; color: #854d0e; }
     .st-delivered { background: #dcfce7; color: #15803d; }
 
-    /* Visual Tracking Timeline Modal */
     .timeline-wrapper { padding: 16px 0; }
     .timeline-step { display: flex; gap: 14px; position: relative; padding-bottom: 20px; }
     .timeline-step:last-child { padding-bottom: 0; }
@@ -112,20 +109,19 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
     .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-    /* Canvas Signature Pad */
     .sig-pad-box { border: 2px dashed var(--border); border-radius: 8px; background: #fafafa; margin: 10px 0; touch-action: none; }
+    #reader { width: 100%; max-width: 400px; margin: 10px auto; display: none; border-radius: 8px; overflow: hidden; border: 2px solid var(--brand); }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Top Bar -->
   <header class="header">
     <div class="brand">
       <div class="brand-icon">C9</div>
       <div>
         <h1 class="brand-title">CORRIDOR 9</h1>
-        <div style="font-size:11px; color:#64748b;">9-Stage Scheduled Express PTL Linehaul Network</div>
+        <div style="font-size:11px; color:#64748b;">Scheduled Express PTL Linehaul Network</div>
       </div>
     </div>
     <div id="sessionHeaderActions" style="display:none; align-items:center; gap:10px;">
@@ -137,9 +133,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     </div>
   </header>
 
-  <!-- ========================================== -->
-  <!-- 1. LANDING & ROLE SELECTOR                 -->
-  <!-- ========================================== -->
+  <!-- 1. LANDING & ROLE SELECTOR -->
   <div id="roleSelectorSection">
     <div style="text-align: center; margin: 20px 0 10px;">
       <h2 style="font-size: 22px; font-weight: 800;">Logistics Operating System</h2>
@@ -156,7 +150,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       <div class="role-card" id="cardOps" onclick="selectRole('ops')">
         <div style="font-size:28px;">🚚</div>
         <strong style="font-size:15px;">Ground Operations Console</strong>
-        <p style="font-size:11px; color:#64748b; margin-top:4px;">Assign driver, 8-milestone scan sequence, bay routing & POD capture.</p>
+        <p style="font-size:11px; color:#64748b; margin-top:4px;">Live camera scanner, driver allocation, 9-stage custody tracking & POD.</p>
       </div>
 
       <div class="role-card" id="cardAdmin" onclick="selectRole('admin')">
@@ -207,9 +201,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 2. MERCHANT DASHBOARD                      -->
-  <!-- ========================================== -->
+  <!-- 2. MERCHANT DASHBOARD -->
   <div id="merchantDashboardSection" style="display:none;">
     <div class="stats-row">
       <div class="stat-card"><div class="stat-label">Prepaid Balance</div><div class="stat-value" id="mStatBalance" style="color:var(--brand);">₹0</div></div>
@@ -219,7 +211,6 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     </div>
 
     <div class="dash-grid">
-      <!-- Wallet Panel -->
       <div>
         <div class="card">
           <div class="card-title"><span>💳 Instant Wallet Top-Up</span></div>
@@ -239,7 +230,6 @@ const unifiedPortalHtml = `<!DOCTYPE html>
         </div>
       </div>
 
-      <!-- Booking Panel -->
       <div>
         <div class="card">
           <div class="card-title"><span>📦 Create Consignment Indent</span></div>
@@ -264,7 +254,6 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- Ready to print labels -->
     <div id="mLabelsContainer" class="card" style="display:none;">
       <div class="card-title">
         <span>Carton Barcode Labels</span>
@@ -273,13 +262,12 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       <div id="mLabelsOutput" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;"></div>
     </div>
 
-    <!-- Consignments Table -->
     <div class="card">
-      <div class="card-title"><span>🚚 My Consignments (Live Location & History)</span></div>
+      <div class="card-title"><span>🚚 My Consignments</span></div>
       <div style="overflow-x:auto;">
         <table id="mDocketsTable">
           <thead>
-            <tr><th>Docket #</th><th>Route</th><th>Current Location / Milestone</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>Docket #</th><th>Route</th><th>Current Location</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -287,12 +275,8 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 3. OPERATIONS WORKSTATION (9 STAGES)       -->
-  <!-- ========================================== -->
+  <!-- 3. OPERATIONS SCANNER WORKSTATION -->
   <div id="opsDashboardSection" style="display:none;">
-    
-    <!-- Stage Scanner Workflow Tabs -->
     <div class="card" style="margin-bottom:16px;">
       <div class="card-title"><span>🔄 Ground Operations Workflow Sequence</span></div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:6px;">
@@ -308,37 +292,39 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- DYNAMIC SCANNING ACTION PANEL -->
     <div class="card" id="opsScanCard">
       <div class="card-title" id="opsStageTitle"><span>0. Dispatch Allocation (Assign Driver & Vehicle)</span></div>
       
       <!-- Stage 0: Assign Driver -->
       <div id="stagePanel_assign">
         <div class="form-row">
-          <div class="form-group"><label>Docket ID</label><input type="text" id="assignDocketId" placeholder="e.g. C9-123456" /></div>
+          <div class="form-group"><label>Docket ID or Box Barcode</label><input type="text" id="assignDocketId" placeholder="e.g. C9-123456" /></div>
           <div class="form-group"><label>Assigned Vehicle Plate</label><input type="text" id="assignVehicle" value="KL-07-CC-4411" /></div>
         </div>
         <div class="form-group"><label>Driver Name & ID</label><input type="text" id="assignDriver" value="Suresh K (DRV-01)" /></div>
         <button class="btn btn-primary" onclick="submitAssignDriver()">Dispatch Driver for Pickup</button>
       </div>
 
-      <!-- Generic Carton Barcode Scanner Panel -->
+      <!-- Generic Milestone Scanner Panel with CAMERA -->
       <div id="stagePanel_scan" style="display:none;">
-        <div class="form-row">
-          <div class="form-group"><label>Box Barcode</label><input type="text" id="genericBarcode" placeholder="Scan C9-123456-B1..." autofocus /></div>
+        <button class="btn btn-camera" onclick="toggleCameraScanner()">📸 Open Camera Barcode Scanner</button>
+        <div id="reader"></div>
+
+        <div class="form-row" style="margin-top:10px;">
+          <div class="form-group"><label>Box Barcode OR Docket ID</label><input type="text" id="genericBarcode" placeholder="Scan or type C9-123456 or C9-123456-B1..." autofocus /></div>
           <div class="form-group"><label id="genericMetaLabel">Station / Staging Bay</label><input type="text" id="genericMetaInput" value="Aluva Mother Hub" /></div>
         </div>
         <button class="btn btn-primary" id="genericScanBtn" onclick="submitMilestoneScan()">Submit Scan Milestone</button>
       </div>
 
-      <!-- Stage 8: Delivery & Digital POD Signature Pad -->
+      <!-- Stage 8: Delivery POD -->
       <div id="stagePanel_pod" style="display:none;">
         <div class="form-row">
-          <div class="form-group"><label>Docket ID</label><input type="text" id="podDocketId" placeholder="e.g. C9-123456" /></div>
+          <div class="form-group"><label>Docket ID or Box Barcode</label><input type="text" id="podDocketId" placeholder="e.g. C9-123456" /></div>
           <div class="form-group"><label>Receiver Name</label><input type="text" id="podReceiverName" value="K. Moideen" /></div>
         </div>
-        <div class="form-group"><label>Receiver Phone / OTP</label><input type="text" id="podReceiverPhone" value="9876543210" /></div>
-        <label>Receiver Digital Signature (Sign on glass below):</label>
+        <div class="form-group"><label>Receiver Phone</label><input type="text" id="podReceiverPhone" value="9876543210" /></div>
+        <label>Receiver Digital Signature (Sign below):</label>
         <div class="sig-pad-box"><canvas id="sigCanvas" width="400" height="120" style="width:100%; height:120px; display:block;"></canvas></div>
         <div style="display:flex; gap:8px; margin-bottom:10px;">
           <button class="btn btn-outline" style="width:auto; padding:4px 10px; font-size:11px;" onclick="clearSignature()">Clear Signature</button>
@@ -349,16 +335,16 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       <div id="opsActionResult"></div>
     </div>
 
-    <!-- Live Corridor Consignment Board for Ops -->
+    <!-- Live Corridor Board -->
     <div class="card">
       <div class="card-title">
-        <span>📍 Live Corridor Custody Board (All Shipments)</span>
+        <span>📍 Live Corridor Custody Board</span>
         <button class="btn btn-outline" style="width:auto; padding:4px 10px; font-size:11px;" onclick="loadOpsMasterFeed()">🔄 Refresh</button>
       </div>
       <div style="overflow-x:auto;">
         <table id="opsMasterTable">
           <thead>
-            <tr><th>Docket #</th><th>Route</th><th>Current Location / Milestone</th><th>Assigned Driver / Truck</th><th>Status</th><th>Chain of Custody</th></tr>
+            <tr><th>Docket #</th><th>Route</th><th>Current Milestone</th><th>Assigned Driver</th><th>Status</th><th>Timeline</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -366,19 +352,17 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 4. MASTER CONTROL TOWER (SUPER-ADMIN)      -->
-  <!-- ========================================== -->
+  <!-- 4. MASTER CONTROL TOWER (SUPER-ADMIN) -->
   <div id="adminDashboardSection" style="display:none;">
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-label">Gross Network Revenue</div><div class="stat-value" id="adStatRevenue" style="color:var(--brand);">₹0</div></div>
-      <div class="stat-card"><div class="stat-label">Total Consignments</div><div class="stat-value" id="adStatTotal">0</div></div>
-      <div class="stat-card"><div class="stat-label">Active Linehaul Shipments</div><div class="stat-value" id="adStatActive" style="color:var(--warning);">0</div></div>
+      <div class="stat-card"><div class="stat-label">Gross Revenue</div><div class="stat-value" id="adStatRevenue" style="color:var(--brand);">₹0</div></div>
+      <div class="stat-card"><div class="stat-label">Total Shipments</div><div class="stat-value" id="adStatTotal">0</div></div>
+      <div class="stat-card"><div class="stat-label">Active Linehaul</div><div class="stat-value" id="adStatActive" style="color:var(--warning);">0</div></div>
       <div class="stat-card"><div class="stat-label">Registered Merchants</div><div class="stat-value" id="adStatMerchants" style="color:var(--accent);">0</div></div>
     </div>
 
     <div class="card">
-      <div class="card-title"><span>📦 Global Consignments & Tracking</span><button class="btn btn-primary" style="width:auto; padding:6px 12px; font-size:12px;" onclick="loadAdminMasterData()">🔄 Refresh</button></div>
+      <div class="card-title"><span>📦 Global Consignments</span><button class="btn btn-primary" style="width:auto; padding:6px 12px; font-size:12px;" onclick="loadAdminMasterData()">🔄 Refresh</button></div>
       <div style="overflow-x:auto;">
         <table id="adShipmentsTable">
           <thead>
@@ -390,7 +374,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     </div>
 
     <div class="card">
-      <div class="card-title"><span>👥 Merchant Accounts & Balance Manager</span></div>
+      <div class="card-title"><span>👥 Merchant Accounts</span></div>
       <div style="overflow-x:auto;">
         <table id="adMerchantsTable">
           <thead>
@@ -403,9 +387,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
   </div>
 </div>
 
-<!-- ========================================== -->
-<!-- 5. VISUAL TIMELINE TRACKING MODAL          -->
-<!-- ========================================== -->
+<!-- 5. VISUAL TRACKING MODAL -->
 <div id="trackingModal" class="modal-overlay">
   <div class="modal-card">
     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:12px;">
@@ -415,9 +397,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       </div>
       <button onclick="closeTrackingModal()" style="background:none; border:none; font-size:18px; font-weight:bold; cursor:pointer;">✕</button>
     </div>
-    
     <div class="timeline-wrapper" id="timelineContainer"></div>
-    
     <div id="podViewBox" style="display:none; margin-top:14px; background:#f8fafc; border:1px solid var(--border); padding:12px; border-radius:8px;">
       <strong style="font-size:12px;">Proof of Delivery (POD)</strong>
       <div id="podMeta" style="font-size:11px; color:#64748b; margin-top:4px;"></div>
@@ -429,6 +409,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
 <script>
   let currentMerchant = JSON.parse(localStorage.getItem('c9_merchant_session') || 'null');
   let currentOpsStage = 'assign';
+  let html5QrcodeScanner = null;
 
   function initApp() {
     initCanvas();
@@ -452,6 +433,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
   function logoutCurrentSession() {
     localStorage.removeItem('c9_merchant_session');
     currentMerchant = null;
+    if (html5QrcodeScanner) stopCamera();
     document.getElementById('sessionHeaderActions').style.display = 'none';
     document.getElementById('merchantDashboardSection').style.display = 'none';
     document.getElementById('opsDashboardSection').style.display = 'none';
@@ -460,7 +442,45 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     selectRole('merchant');
   }
 
-  // --- MERCHANT AUTH & DASHBOARD ---
+  // --- CAMERA BARCODE SCANNER LOGIC ---
+  function toggleCameraScanner() {
+    const readerDiv = document.getElementById('reader');
+    if (readerDiv.style.display === 'block') {
+      stopCamera();
+    } else {
+      startCamera();
+    }
+  }
+
+  function startCamera() {
+    document.getElementById('reader').style.display = 'block';
+    html5QrcodeScanner = new Html5Qrcode("reader");
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 150 } },
+      (decodedText) => {
+        document.getElementById('genericBarcode').value = decodedText;
+        stopCamera();
+        submitMilestoneScan();
+      },
+      (errorMessage) => {}
+    ).catch(err => {
+      alert("Camera permission denied or camera not supported: " + err);
+      stopCamera();
+    });
+  }
+
+  function stopCamera() {
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.stop().then(() => {
+        document.getElementById('reader').style.display = 'none';
+      }).catch(err => {
+        document.getElementById('reader').style.display = 'none';
+      });
+    }
+  }
+
+  // --- MERCHANT HANDLERS ---
   function switchMerchantTab(tab) {
     document.getElementById('mTabLogin').className = tab === 'login' ? 'auth-tab-btn active' : 'auth-tab-btn';
     document.getElementById('mTabReg').className = tab === 'reg' ? 'auth-tab-btn active' : 'auth-tab-btn';
@@ -607,7 +627,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       out.innerHTML = \`
         <div class="alert alert-success" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
           <span>🎉 <strong>\${data.docket_id}</strong> Booked (-₹\${data.deducted_amount})</span>
-          <button onclick="openTrackingModal('\${data.docket_id}')" style="background:#0f172a; color:white; border:none; padding:5px 10px; border-radius:6px; font-size:11px; cursor:pointer;">📍 Track Milestone</button>
+          <button onclick="openTrackingModal('\${data.docket_id}')" style="background:#0f172a; color:white; border:none; padding:5px 10px; border-radius:6px; font-size:11px; cursor:pointer;">📍 Track</button>
         </div>\`;
       document.getElementById('mLabelsContainer').style.display = 'block';
       data.boxes.forEach(b => {
@@ -625,7 +645,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     }
   }
 
-  // --- OPS WORKFLOW & SCANNING LOGIC ---
+  // --- OPS LOGIC ---
   function verifyOpsPin() {
     if (document.getElementById('opsPinInput').value === '1234') {
       document.getElementById('roleSelectorSection').style.display = 'none';
@@ -646,13 +666,14 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     mother_in: { num: 2, title: '2. Mother Hub Inward Scan (Kochi Central)', type: 'scan', scan_type: 'MOTHER_HUB_INWARD', meta: 'Kochi Mother Hub Gate', label: 'Hub Facility' },
     bay_in: { num: 3, title: '3. Mother Hub Bay Routing Scan', type: 'scan', scan_type: 'BAY_STAGED', meta: 'BAY-NORTH-KOZHIKODE', label: 'Route Staging Bay' },
     linehaul_out: { num: 4, title: '4. Linehaul Outward Manifest Scan', type: 'scan', scan_type: 'LINEHAUL_OUTWARD', meta: 'LINEHAUL-TRUCK-KL-07-8899', label: 'Linehaul Vehicle' },
-    dest_in: { num: 5, title: '5. Destination Hub Inward De-Manifest Scan', type: 'scan', scan_type: 'DEST_HUB_INWARD', meta: 'Kozhikode Valiyangadi Hub', label: 'Destination Hub' },
-    dest_bay: { num: 6, title: '6. Destination Bay Sorting Scan', type: 'scan', scan_type: 'DEST_BAY_STAGED', meta: 'DELIVERY-BAY-LOCAL-01', label: 'Local Delivery Bay' },
+    dest_in: { num: 5, title: '5. Destination Hub Inward Scan', type: 'scan', scan_type: 'DEST_HUB_INWARD', meta: 'Kozhikode Valiyangadi Hub', label: 'Destination Hub' },
+    dest_bay: { num: 6, title: '6. Destination Bay Sorting Scan', type: 'scan', scan_type: 'DEST_BAY_STAGED', meta: 'DELIVERY-BAY-LOCAL-01', label: 'Delivery Bay' },
     ofd: { num: 7, title: '7. Out For Delivery (Last-Mile Van Load)', type: 'scan', scan_type: 'OUT_FOR_DELIVERY', meta: 'VAN-LASTMILE-04', label: 'Delivery Vehicle' },
     pod: { num: 8, title: '8. Consignee Delivery & Digital POD Signature', type: 'pod' }
   };
 
   function setOpsWorkflowStage(stageKey) {
+    if (html5QrcodeScanner) stopCamera();
     currentOpsStage = stageKey;
     const cfg = STAGE_CONFIG[stageKey];
     for (let i = 0; i <= 8; i++) {
@@ -699,7 +720,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     const box_barcode = document.getElementById('genericBarcode').value.trim();
     const location = document.getElementById('genericMetaInput').value.trim();
     const cfg = STAGE_CONFIG[currentOpsStage];
-    if (!box_barcode) return alert('Please enter or scan a box barcode.');
+    if (!box_barcode) return alert('Please enter or scan a barcode.');
 
     const res = await fetch('/api/ops/milestone-scan', {
       method: 'POST',
@@ -734,7 +755,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     \`).join('') : '<tr><td colspan="6" style="text-align:center; color:#94a3b8;">No consignments in corridor yet.</td></tr>';
   }
 
-  // --- DIGITAL SIGNATURE ON GLASS CANVAS ---
+  // --- SIGNATURE CANVAS ---
   let canvas, ctx, isDrawing = false;
   function initCanvas() {
     canvas = document.getElementById('sigCanvas');
@@ -767,7 +788,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     const docket_id = document.getElementById('podDocketId').value.trim();
     const receiver_name = document.getElementById('podReceiverName').value.trim();
     const receiver_phone = document.getElementById('podReceiverPhone').value.trim();
-    const signature_data = canvas.toDataURL();
+    const signature_data = canvas ? canvas.toDataURL() : '';
 
     if (!docket_id) return alert('Enter Docket ID');
 
@@ -786,7 +807,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     }
   }
 
-  // --- VISUAL TRACKING TIMELINE MODAL ---
+  // --- VISUAL TRACKING MODAL ---
   const ALL_MILESTONES = [
     { key: 'INDENT_CREATED', label: 'Order Booked & Indent Created', icon: '1' },
     { key: 'DISPATCHED_FOR_PICKUP', label: 'Driver & Vehicle Allocated for Pickup', icon: '2' },
@@ -794,7 +815,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     { key: 'MOTHER_HUB_INWARD', label: 'Mother Hub Inward Gate Scan (Kochi)', icon: '4' },
     { key: 'STAGED_IN_BAY', label: 'Staged in Route Sorting Bay', icon: '5' },
     { key: 'LINEHAUL_TRANSIT', label: 'Loaded on Corridor Linehaul Express', icon: '6' },
-    { key: 'DEST_HUB_INWARD', label: 'Arrived & Inward at Destination Terminal', icon: '7' },
+    { key: 'DEST_HUB_INWARD', label: 'Arrived at Destination Terminal', icon: '7' },
     { key: 'DEST_BAY_STAGED', label: 'Staged in Delivery Bay', icon: '8' },
     { key: 'OUT_FOR_DELIVERY', label: 'Out for Final-Mile Delivery', icon: '9' },
     { key: 'DELIVERED', label: 'Delivered (Digital POD Recorded)', icon: '✓' }
@@ -850,7 +871,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     document.getElementById('trackingModal').style.display = 'none';
   }
 
-  // --- ADMIN AUTH & DASHBOARD ---
+  // --- ADMIN LOGIC ---
   function verifyAdminPin() {
     if (document.getElementById('adminPinInput').value === '9999') {
       document.getElementById('roleSelectorSection').style.display = 'none';
@@ -931,28 +952,27 @@ const unifiedPortalHtml = `<!DOCTYPE html>
 </body>
 </html>`;
 
-// --- UNIFIED SERVE ROUTE ---
-app.get(['/', '/ops', '/admin'], (req, res) => {
-  res.send(unifiedPortalHtml);
-});
+// --- ROUTING ---
+app.get(['/', '/ops', '/admin'], (req, res) => res.send(unifiedPortalHtml));
 
 // ==========================================
-// BACKEND LOGISTICS ENGINE & APIS
+// BACKEND API ENDPOINTS
 // ==========================================
-
-// 1. PUBLIC TIMELINE TRACKING API
 app.get('/api/tracking/:docket_id', (req, res) => {
   try {
-    const dataStorePath = path.join(__dirname, 'data_store.json');
-    let store = { dockets: {}, scan_logs: [], pods: {} };
-    if (fs.existsSync(dataStorePath)) {
-      store = JSON.parse(fs.readFileSync(dataStorePath, 'utf8'));
-    }
-    const docket = store.dockets[req.params.docket_id];
+    const db = getDB();
+    let docket_id = req.params.docket_id.trim();
+    if (docket_id.includes('-B')) docket_id = docket_id.split('-B')[0];
+
+    const docket = db.getDocket(docket_id);
     if (!docket) return res.status(404).json({ success: false, error: 'Docket not found' });
 
-    const history = (store.scan_logs || []).filter(l => l.docket_id === req.params.docket_id);
-    const pod = (store.pods || {})[req.params.docket_id] || null;
+    const dataStorePath = path.join(__dirname, 'data_store.json');
+    let store = { scan_logs: [], pods: {} };
+    if (fs.existsSync(dataStorePath)) store = JSON.parse(fs.readFileSync(dataStorePath, 'utf8'));
+
+    const history = (store.scan_logs || []).filter(l => l.docket_id === docket_id);
+    const pod = (store.pods || {})[docket_id] || null;
 
     res.json({ success: true, docket, history, pod });
   } catch (err) {
@@ -960,13 +980,15 @@ app.get('/api/tracking/:docket_id', (req, res) => {
   }
 });
 
-// 2. OPS STAGE 0: ASSIGN DRIVER & VEHICLE
 app.post('/api/ops/assign-dispatch', (req, res) => {
   try {
     const db = getDB();
-    const { docket_id, assigned_vehicle, assigned_driver } = req.body;
+    let { docket_id, assigned_vehicle, assigned_driver } = req.body;
+    if (!docket_id) return res.status(400).json({ success: false, error: 'Docket ID required' });
+    if (docket_id.includes('-B')) docket_id = docket_id.split('-B')[0];
+
     const docket = db.getDocket(docket_id);
-    if (!docket) return res.status(404).json({ success: false, error: 'Docket not found' });
+    if (!docket) return res.status(404).json({ success: false, error: `Docket ${docket_id} not found in database.` });
 
     docket.status = 'DISPATCHED_FOR_PICKUP';
     docket.assigned_vehicle = assigned_vehicle;
@@ -988,7 +1010,6 @@ app.post('/api/ops/assign-dispatch', (req, res) => {
   }
 });
 
-// 3. OPS GENERIC MILESTONE SCANNING
 const MILESTONE_STATUS_MAP = {
   PICKUP: { status: 'PICKED_UP', text: 'First-Mile Pickup Complete (e-LR Issued)' },
   MOTHER_HUB_INWARD: { status: 'MOTHER_HUB_INWARD', text: 'Arrived at Mother Hub (Kochi)' },
@@ -999,36 +1020,46 @@ const MILESTONE_STATUS_MAP = {
   OUT_FOR_DELIVERY: { status: 'OUT_FOR_DELIVERY', text: 'Out for Final Mile Delivery' }
 };
 
+// Tolerant Scan Handler (Accepts Docket ID OR Box Barcode)
 app.post('/api/ops/milestone-scan', (req, res) => {
   try {
     const db = getDB();
-    const { box_barcode, scan_type, location, scanned_by } = req.body;
-    const box = db.getBox(box_barcode);
-    if (!box) return res.status(404).json({ success: false, error: 'Invalid Box Barcode' });
+    let { box_barcode, scan_type, location, scanned_by } = req.body;
+    box_barcode = (box_barcode || '').trim();
+
+    let docket_id = box_barcode;
+    if (docket_id.includes('-B')) {
+      docket_id = docket_id.split('-B')[0];
+    }
+
+    let docket = db.getDocket(docket_id);
+    if (!docket) {
+      const box = db.getBox(box_barcode);
+      if (box) {
+        docket_id = box.docket_id;
+        docket = db.getDocket(docket_id);
+      }
+    }
+
+    if (!docket) {
+      return res.status(404).json({ success: false, error: `Invalid Barcode or Docket ID (${box_barcode})` });
+    }
 
     const milestone = MILESTONE_STATUS_MAP[scan_type];
     if (!milestone) return res.status(400).json({ success: false, error: 'Invalid Scan Type' });
 
-    box.current_status = milestone.status;
-    box.current_location = location;
-    box.last_scanned_at = new Date().toISOString();
-    db.setBox(box_barcode, box);
+    docket.status = milestone.status;
+    docket.current_milestone_text = milestone.text;
+    docket.current_location = location;
 
-    const docket = db.getDocket(box.docket_id);
-    if (docket) {
-      docket.status = milestone.status;
-      docket.current_milestone_text = milestone.text;
-      docket.current_location = location;
-
-      if (scan_type === 'PICKUP' && !docket.lr_number) {
-        docket.lr_number = 'LR-C9-' + Date.now().toString().slice(-6);
-        sendLREmail(docket.customer_email, docket, docket.lr_number);
-      }
-      db.setDocket(box.docket_id, docket);
+    if (scan_type === 'PICKUP' && !docket.lr_number) {
+      docket.lr_number = 'LR-C9-' + Date.now().toString().slice(-6);
+      sendLREmail(docket.customer_email, docket, docket.lr_number);
     }
+    db.setDocket(docket_id, docket);
 
     db.addScanLog({
-      docket_id: box.docket_id,
+      docket_id,
       box_barcode,
       status: milestone.status,
       scan_type,
@@ -1040,6 +1071,7 @@ app.post('/api/ops/milestone-scan', (req, res) => {
     res.json({
       success: true,
       box_barcode,
+      docket_id,
       current_status: milestone.status,
       milestone_text: milestone.text
     });
@@ -1048,11 +1080,15 @@ app.post('/api/ops/milestone-scan', (req, res) => {
   }
 });
 
-// 4. FINAL DELIVERY POD
 app.post('/api/scan/deliver', (req, res) => {
   try {
     const db = getDB();
-    const { docket_id, receiver_name, receiver_phone, signature_data } = req.body;
+    let { docket_id, receiver_name, receiver_phone, signature_data } = req.body;
+    docket_id = (docket_id || '').trim();
+    if (docket_id.includes('-B')) docket_id = docket_id.split('-B')[0];
+
+    const docket = db.getDocket(docket_id);
+    if (!docket) return res.status(404).json({ success: false, error: `Docket ${docket_id} not found.` });
 
     db.setPod(docket_id, {
       docket_id,
@@ -1062,14 +1098,11 @@ app.post('/api/scan/deliver', (req, res) => {
       delivered_at: new Date().toISOString()
     });
 
-    const docket = db.getDocket(docket_id);
-    if (docket) {
-      docket.status = 'DELIVERED';
-      docket.current_milestone_text = `Delivered to ${receiver_name}`;
-      docket.current_location = 'Consignee Doorstep';
-      db.setDocket(docket_id, docket);
-      sendDeliveryEmail(docket.customer_email, docket, receiver_name);
-    }
+    docket.status = 'DELIVERED';
+    docket.current_milestone_text = `Delivered to ${receiver_name}`;
+    docket.current_location = 'Consignee Doorstep';
+    db.setDocket(docket_id, docket);
+    sendDeliveryEmail(docket.customer_email, docket, receiver_name);
 
     db.addScanLog({
       docket_id,
@@ -1400,5 +1433,5 @@ app.get('/api/invoice/:docket_id', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 initDB().then(() => {
-  app.listen(PORT, () => console.log(`🚀 Corridor 9 Chain of Custody Engine on port ${PORT}`));
+  app.listen(PORT, () => console.log(`🚀 Corridor 9 Live Camera Engine on port ${PORT}`));
 });
