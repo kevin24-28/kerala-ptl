@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Corridor 9 | Scheduled PTL Logistics</title>
-  <!-- Google Fonts & Lucide Icons -->
+  <title>Corridor 9 | Merchant Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -26,109 +25,61 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; padding: 32px 16px; }
-    .container { max-width: 960px; margin: 0 auto; }
+    body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; padding: 24px 16px; }
+    .container { max-width: 1080px; margin: 0 auto; }
 
-    /* Header */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 28px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-    }
+    /* Top Nav */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-icon {
-      width: 44px; height: 44px; background: linear-gradient(135deg, #0f172a, #2563eb);
-      color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 18px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-    }
-    .brand-title { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
-    .brand-tag { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-    .status-badge {
-      display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
-      color: #047857; background: #ecfdf5; padding: 6px 14px; border-radius: 999px; border: 1px solid #a7f3d0;
-    }
-    .pulse-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .brand-icon { width: 42px; height: 42px; background: linear-gradient(135deg, #0f172a, #2563eb); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+    .brand-title { font-size: 20px; font-weight: 800; color: var(--primary); }
+    
+    /* Auth Modal / Card */
+    .auth-wrapper { max-width: 440px; margin: 60px auto; }
+    .auth-card { background: white; padding: 32px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .auth-tab-btn { background: none; border: none; font-size: 15px; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 8px 12px; }
+    .auth-tab-btn.active { color: var(--brand); border-bottom: 2px solid var(--brand); }
 
-    /* Layout */
-    .main-grid { display: grid; grid-template-columns: 1.1fr 2fr; gap: 24px; }
-    @media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; } }
+    /* Dashboard Layout */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
+    .stat-value { font-size: 28px; font-weight: 800; color: var(--primary); margin-top: 6px; }
 
-    .card {
-      background: var(--card-bg); border-radius: var(--radius); padding: 24px;
-      border: 1px solid var(--border); box-shadow: var(--shadow); position: relative;
-    }
-    .card-title {
-      font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 18px;
-      display: flex; align-items: center; gap: 8px;
-    }
+    .dash-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 24px; }
+    @media (max-width: 860px) { .dash-grid { grid-template-columns: 1fr; } }
 
-    /* Wallet Box */
-    .wallet-balance-box {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      color: white; padding: 22px; border-radius: 12px; margin-bottom: 20px;
-      position: relative; overflow: hidden; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
-    }
-    .wallet-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; font-weight: 600; }
-    .wallet-amount { font-size: 32px; font-weight: 800; margin: 6px 0 12px; color: #ffffff; }
-    .customer-pill {
-      font-size: 12px; background: rgba(255, 255, 255, 0.1); padding: 4px 10px;
-      border-radius: 6px; display: inline-block; color: #cbd5e1; font-family: monospace;
-    }
+    .card { background: var(--card-bg); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 24px; }
+    .card-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
 
-    /* Form Fields */
-    .form-group { margin-bottom: 16px; }
+    .form-group { margin-bottom: 14px; }
     .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    input, select {
-      width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px;
-      font-size: 14px; color: var(--text-main); background: #ffffff; transition: all 0.2s ease;
-    }
-    input:focus, select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
+    input:focus, select:focus { outline: none; border-color: var(--brand); }
 
-    /* Buttons */
-    .btn {
-      width: 100%; padding: 13px 20px; border-radius: 8px; font-size: 14px; font-weight: 700;
-      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      gap: 8px; transition: all 0.2s ease; text-decoration: none;
-    }
-    .btn-primary { background: var(--brand); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
-    .btn-primary:hover { background: var(--brand-hover); }
-    .btn-outline { background: transparent; color: #334155; border: 1.5px solid var(--border); }
-    .btn-outline:hover { background: #f1f5f9; }
-    .btn-invoice {
-      background: #0f172a !important; color: white !important; padding: 10px 18px !important;
-      font-size: 13px !important; width: auto !important; border-radius: 8px !important;
-      display: inline-flex !important; align-items: center !important; gap: 8px !important;
-    }
+    .btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+    .btn-primary { background: var(--brand); color: white; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: #334155; }
+    .btn-logout { background: #fee2e2; color: #991b1b; padding: 6px 14px; font-size: 12px; border-radius: 6px; width: auto; font-weight: 600; cursor: pointer; border: none; }
 
-    /* Live Rate Estimation */
-    .rate-chip-box {
-      background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;
-      padding: 14px; margin: 18px 0; font-size: 13px; color: #475569;
-    }
-    .rate-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-    .rate-row.total { font-weight: 700; color: var(--primary); font-size: 14px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 6px; }
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+    th { background: #f8fafc; text-align: left; padding: 10px; color: #64748b; font-weight: 600; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
+    .status-pill { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .status-created { background: #fef3c7; color: #92400e; }
+    .status-picked { background: #e0f2fe; color: #0369a1; }
+    .status-delivered { background: #dcfce7; color: #15803d; }
 
-    /* Alerts */
-    .alert { padding: 16px; border-radius: 10px; font-size: 14px; margin-top: 16px; }
-    .alert-success { background: #ecfdf5; color: #065f46; border: 1.5px solid #a7f3d0; }
-    .alert-error { background: #fef2f2; color: #991b1b; border: 1.5px solid #fecaca; }
+    .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+    .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-    /* Barcode Labels */
-    .labels-section { margin-top: 28px; }
-    .labels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 14px; }
-    .label-card {
-      background: white; border: 2px dashed #0f172a; border-radius: 8px; padding: 16px;
-      text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-    }
-    .label-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
-    .label-barcode-img { width: 100%; height: 75px; object-fit: contain; margin: 8px 0; }
-    .label-route { font-size: 14px; font-weight: 800; color: var(--primary); }
-    .label-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .labels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 14px; }
+    .label-card { background: white; border: 2px dashed #0f172a; border-radius: 8px; padding: 14px; text-align: center; }
+    .label-card img { width: 100%; height: 65px; object-fit: contain; margin: 6px 0; }
   </style>
 </head>
 <body>
@@ -140,169 +91,363 @@
       <div class="brand-icon">C9</div>
       <div>
         <h1 class="brand-title">CORRIDOR 9</h1>
-        <div class="brand-tag">Express PTL Linehaul Logistics (NH-66 Direct)</div>
+        <div style="font-size:12px; color:var(--text-muted);">Scheduled Express PTL Linehaul Network</div>
       </div>
     </div>
-    <div class="status-badge">
-      <span class="pulse-dot"></span> Corridor Active
+    <div id="userHeaderActions" style="display:none; align-items:center; gap:14px;">
+      <div style="text-align:right;">
+        <strong id="headerUserName" style="font-size:14px;">Merchant</strong><br>
+        <span id="headerCustomerId" style="font-size:11px; color:var(--text-muted); font-family:monospace;">C9-CUST-XXXX</span>
+      </div>
+      <button class="btn-logout" onclick="logout()"><i data-lucide="log-out"></i> Sign Out</button>
     </div>
   </header>
 
-  <div class="main-grid">
-    <!-- LEFT: Merchant Wallet -->
-    <div class="card">
-      <div class="card-title"><i data-lucide="wallet"></i> Merchant Account</div>
-      
-      <div class="wallet-balance-box">
-        <div class="wallet-label">Prepaid Balance</div>
-        <div class="wallet-amount" id="balanceDisplay">₹5,000</div>
-        <span class="customer-pill" id="customerPill">CUST-ALUVA-01</span>
+  <!-- AUTH SECTION (LOGIN / REGISTER) -->
+  <div id="authSection" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button id="tabLoginBtn" class="auth-tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
+        <button id="tabRegisterBtn" class="auth-tab-btn" onclick="switchAuthTab('register')">Create Account</button>
       </div>
 
-      <div class="form-group">
-        <label>Customer Account ID</label>
-        <input type="text" id="cust_id" value="CUST-ALUVA-01" />
-      </div>
-      <div class="form-group">
-        <label>Notification Email (For Invoices/e-LR)</label>
-        <input type="email" id="cust_email" placeholder="merchant@business.com" value="merchant@gmail.com" />
-      </div>
-      <div class="form-group">
-        <label>Quick Recharge Amount (₹)</label>
-        <input type="number" id="topup_amt" value="5000" step="500" />
-      </div>
-      <button class="btn btn-outline" onclick="rechargeWallet()">
-        <i data-lucide="plus-circle"></i> Add Funds / Verify
-      </button>
-      <div id="walletAlert"></div>
-    </div>
-
-    <!-- RIGHT: Booking Indent Form -->
-    <div class="card">
-      <div class="card-title"><i data-lucide="package-plus"></i> Create Corridor 9 Indent</div>
-
-      <div class="form-row">
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
         <div class="form-group">
-          <label>Origin Terminal</label>
-          <select id="origin">
-            <option value="Kochi">Kochi (Aluva Central Hub)</option>
-            <option value="Thrissur">Thrissur Hub</option>
-            <option value="Kozhikode">Kozhikode Hub</option>
-          </select>
+          <label>Business Email</label>
+          <input type="email" id="loginEmail" required placeholder="merchant@business.com" />
         </div>
         <div class="form-group">
-          <label>Destination Terminal</label>
-          <select id="destination">
-            <option value="Kozhikode">Kozhikode (Valiyangadi Direct)</option>
-            <option value="Trivandrum">Trivandrum Hub</option>
-            <option value="Thrissur">Thrissur Hub</option>
-          </select>
+          <label>Password</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••" />
         </div>
-      </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px;">Sign In to Dashboard</button>
+      </form>
 
-      <div class="form-row">
+      <!-- Register Form -->
+      <form id="registerForm" style="display:none;" onsubmit="handleRegister(event)">
         <div class="form-group">
-          <label>Consignee Business Name</label>
-          <input type="text" id="consignee_name" value="Malabar Traders" />
+          <label>Business / Company Name</label>
+          <input type="text" id="regCompany" required placeholder="Malabar Trading Co." />
         </div>
         <div class="form-group">
-          <label>Consignee Phone</label>
-          <input type="text" id="consignee_phone" value="9876543210" />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Carton Count</label>
-          <input type="number" id="total_boxes" value="2" min="1" oninput="calculateLiveQuote()" />
+          <label>Contact Person Name</label>
+          <input type="text" id="regName" required placeholder="Rahul V." />
         </div>
         <div class="form-group">
-          <label>Dead Weight (kg)</label>
-          <input type="number" id="dead_weight" value="120" min="1" oninput="calculateLiveQuote()" />
+          <label>Mobile Number</label>
+          <input type="tel" id="regPhone" required placeholder="9847000000" />
         </div>
-      </div>
+        <div class="form-group">
+          <label>Business Email</label>
+          <input type="email" id="regEmail" required placeholder="trader@gmail.com" />
+        </div>
+        <div class="form-group">
+          <label>Create Password</label>
+          <input type="password" id="regPassword" required placeholder="••••••••" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px;">Register & Get ₹2,000 Bonus</button>
+      </form>
 
-      <!-- Live Rate Estimator -->
-      <div class="rate-chip-box">
-        <div class="rate-row"><span>Base Freight:</span> <span id="rateBase">₹660</span></div>
-        <div class="rate-row"><span>Docket Fee + Fuel Surcharge (10%):</span> <span id="rateSurcharges">₹186</span></div>
-        <div class="rate-row"><span>GST (5%):</span> <span id="rateGST">₹42</span></div>
-        <div class="rate-row total"><span>Total Freight:</span> <span id="rateGrandTotal" style="color:var(--brand);">₹888</span></div>
-      </div>
-
-      <button class="btn btn-primary" onclick="createBooking()">
-        <i data-lucide="check-circle-2"></i> Confirm Booking & Print Labels
-      </button>
-
-      <div id="bookingResult"></div>
+      <div id="authAlert"></div>
     </div>
   </div>
 
-  <!-- LABELS & INVOICE OUTPUT -->
-  <div class="labels-section" id="labelsContainer" style="display:none;">
-    <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div class="card-title" style="margin-bottom:0;"><i data-lucide="printer"></i> Ready-to-Print Thermal Labels</div>
-        <button class="btn btn-outline" style="width: auto; padding: 6px 14px; font-size: 12px;" onclick="window.print()">
-          <i data-lucide="printer"></i> Print Labels
-        </button>
+  <!-- DASHBOARD SECTION (AUTHENTICATED ONLY) -->
+  <div id="dashboardSection" style="display:none;">
+    
+    <!-- Top Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Prepaid Balance</div>
+        <div class="stat-value" id="statBalance" style="color:var(--brand);">₹0</div>
       </div>
-      <div class="labels-grid" id="labelsOutput"></div>
+      <div class="stat-card">
+        <div class="stat-label">Total Shipments</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">In Transit</div>
+        <div class="stat-value" id="statActive" style="color:#d97706;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Delivered</div>
+        <div class="stat-value" id="statDelivered" style="color:var(--accent);">0</div>
+      </div>
     </div>
+
+    <div class="dash-grid">
+      <!-- LEFT: Wallet & Quick Actions -->
+      <div>
+        <div class="card">
+          <div class="card-title"><span>💳 Wallet Top-Up</span></div>
+          <div class="form-group">
+            <label>Recharge Amount (₹)</label>
+            <input type="number" id="topupAmt" value="5000" step="500" />
+          </div>
+          <button class="btn btn-outline" onclick="topupWallet()"><i data-lucide="plus-circle"></i> Add Funds</button>
+          <div id="walletAlert"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>📜 Wallet Passbook</span></div>
+          <div style="max-height: 250px; overflow-y: auto;">
+            <table id="txnTable">
+              <thead>
+                <tr><th>Txn</th><th>Description</th><th>Amount</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Create Indent Booking -->
+      <div>
+        <div class="card">
+          <div class="card-title"><span>📦 Book New Consignment</span></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Origin Hub</label>
+              <select id="origin">
+                <option value="Kochi">Kochi (Aluva Mother Hub)</option>
+                <option value="Thrissur">Thrissur Hub</option>
+                <option value="Kozhikode">Kozhikode Hub</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Destination Hub</label>
+              <select id="destination">
+                <option value="Kozhikode">Kozhikode (Valiyangadi Direct)</option>
+                <option value="Trivandrum">Trivandrum Hub</option>
+                <option value="Thrissur">Thrissur Hub</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Consignee Name</label>
+              <input type="text" id="consigneeName" value="Malabar Traders" />
+            </div>
+            <div class="form-group">
+              <label>Consignee Phone</label>
+              <input type="text" id="consigneePhone" value="9876543210" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cartons</label>
+              <input type="number" id="totalBoxes" value="2" min="1" oninput="calculateLiveQuote()" />
+            </div>
+            <div class="form-group">
+              <label>Weight (kg)</label>
+              <input type="number" id="deadWeight" value="120" min="1" oninput="calculateLiveQuote()" />
+            </div>
+          </div>
+
+          <div style="background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:14px; font-size:13px;">
+            Estimated Total Freight (incl. GST): <strong id="quoteDisplay" style="color:var(--brand);">₹888</strong>
+          </div>
+
+          <button class="btn btn-primary" onclick="createBooking()"><i data-lucide="check-circle-2"></i> Book & Deduct Freight</button>
+          <div id="bookingResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOKING LABELS POPUP CONTAINER -->
+    <div id="labelsContainer" class="card" style="display:none;">
+      <div class="card-title">
+        <span>Ready-to-Print Thermal Labels</span>
+        <button class="btn btn-outline" style="width:auto; padding:6px 14px;" onclick="window.print()">🖨️ Print Labels</button>
+      </div>
+      <div id="labelsOutput" class="labels-grid"></div>
+    </div>
+
+    <!-- RECENT SHIPMENTS TABLE -->
+    <div class="card">
+      <div class="card-title"><span>🚚 My Consignment History</span></div>
+      <div style="overflow-x:auto;">
+        <table id="docketsTable">
+          <thead>
+            <tr>
+              <th>Docket #</th>
+              <th>Destination</th>
+              <th>Boxes / Wt</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <script>
-  lucide.createIcons();
+  let currentUser = JSON.parse(localStorage.getItem('c9_user')) || null;
 
-  function calculateLiveQuote() {
-    const deadWeight = Number(document.getElementById('dead_weight').value) || 0;
-    const base = Math.max(deadWeight * 5.5, 350);
-    const fsc = base * 0.10;
-    const docket = 120;
-    const subtotal = base + fsc + docket;
-    const gst = subtotal * 0.05;
-    const total = Math.round(subtotal + gst);
-
-    document.getElementById('rateBase').innerText = `₹${Math.round(base)}`;
-    document.getElementById('rateSurcharges').innerText = `₹${Math.round(fsc + docket)}`;
-    document.getElementById('rateGST').innerText = `₹${Math.round(gst)}`;
-    document.getElementById('rateGrandTotal').innerText = `₹${total}`;
+  function initApp() {
+    lucide.createIcons();
+    if (currentUser) {
+      showDashboard();
+    } else {
+      showAuth();
+    }
   }
 
-  async function rechargeWallet() {
-    const customer_id = document.getElementById('cust_id').value;
-    const email = document.getElementById('cust_email').value;
-    const amount = document.getElementById('topup_amt').value;
+  function switchAuthTab(tab) {
+    document.getElementById('tabLoginBtn').className = tab === 'login' ? 'auth-tab-btn active' : 'auth-tab-btn';
+    document.getElementById('tabRegisterBtn').className = tab === 'register' ? 'auth-tab-btn active' : 'auth-tab-btn';
+    document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    const alertBox = document.getElementById('authAlert');
+
+    if (data.success) {
+      currentUser = data.user;
+      localStorage.setItem('c9_user', JSON.stringify(currentUser));
+      showDashboard();
+    } else {
+      alertBox.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+    }
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    const payload = {
+      company: document.getElementById('regCompany').value,
+      name: document.getElementById('regName').value,
+      phone: document.getElementById('regPhone').value,
+      email: document.getElementById('regEmail').value,
+      password: document.getElementById('regPassword').value
+    };
+
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    const alertBox = document.getElementById('authAlert');
+
+    if (data.success) {
+      currentUser = data.user;
+      localStorage.setItem('c9_user', JSON.stringify(currentUser));
+      showDashboard();
+    } else {
+      alertBox.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('c9_user');
+    currentUser = null;
+    showAuth();
+  }
+
+  function showAuth() {
+    document.getElementById('authSection').style.display = 'block';
+    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('userHeaderActions').style.display = 'none';
+  }
+
+  async function showDashboard() {
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('dashboardSection').style.display = 'block';
+    document.getElementById('userHeaderActions').style.display = 'flex';
+    document.getElementById('headerUserName').innerText = currentUser.company || currentUser.name;
+    document.getElementById('headerCustomerId').innerText = currentUser.customer_id;
     
+    await refreshDashboardData();
+    calculateLiveQuote();
+  }
+
+  async function refreshDashboardData() {
+    const res = await fetch(`/api/merchant/dashboard/${currentUser.customer_id}`);
+    const data = await res.json();
+    if (!data.success) return;
+
+    // Update Stats
+    document.getElementById('statBalance').innerText = `₹${data.stats.wallet_balance}`;
+    document.getElementById('statTotal').innerText = data.stats.total_shipments;
+    document.getElementById('statActive').innerText = data.stats.active_shipments;
+    document.getElementById('statDelivered').innerText = data.stats.delivered_shipments;
+
+    // Update Transactions Table
+    const txnBody = document.querySelector('#txnTable tbody');
+    txnBody.innerHTML = data.transactions.map(t => `
+      <tr>
+        <td><strong style="font-size:11px;">${t.type}</strong></td>
+        <td>${t.description}</td>
+        <td style="color:${t.type === 'FREIGHT_DEDUCT' ? '#dc2626' : '#16a34a'}; font-weight:bold;">
+          ${t.type === 'FREIGHT_DEDUCT' ? '-' : '+'}₹${t.amount}
+        </td>
+      </tr>
+    `).join('') || '<tr><td colspan="3">No transactions yet.</td></tr>';
+
+    // Update Dockets Table
+    const docketBody = document.querySelector('#docketsTable tbody');
+    docketBody.innerHTML = data.recent_dockets.map(d => `
+      <tr>
+        <td><strong>${d.docket_id}</strong><br><small style="color:#64748b;">${new Date(d.created_at).toLocaleDateString()}</small></td>
+        <td>${d.origin} ➔ ${d.destination}<br><small>${d.consignee_name}</small></td>
+        <td>${d.total_boxes} boxes (${d.chargeable_weight_kg} kg)</td>
+        <td><span class="status-pill status-${d.status.toLowerCase().includes('deliv') ? 'delivered' : d.status.toLowerCase().includes('pick') ? 'picked' : 'created'}">${d.status}</span></td>
+        <td><a href="/api/invoice/${d.docket_id}" target="_blank" style="color:var(--brand); font-weight:bold; text-decoration:none;">📄 Invoice</a></td>
+      </tr>
+    `).join('') || '<tr><td colspan="5">No shipments booked yet.</td></tr>';
+
+    lucide.createIcons();
+  }
+
+  function calculateLiveQuote() {
+    const deadWeight = Number(document.getElementById('deadWeight').value) || 0;
+    const base = Math.max(deadWeight * 5.5, 350);
+    const total = Math.round((base + (base * 0.10) + 120) * 1.05);
+    document.getElementById('quoteDisplay').innerText = `₹${total}`;
+  }
+
+  async function topupWallet() {
+    const amount = document.getElementById('topupAmt').value;
     const res = await fetch('/api/wallet/topup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ customer_id, name: 'Aluva Merchant', phone: '9847000000', email, amount })
+      body: JSON.stringify({ customer_id: currentUser.customer_id, amount })
     });
     const data = await res.json();
-    const alertBox = document.getElementById('walletAlert');
-    
     if (data.success) {
-      document.getElementById('balanceDisplay').innerText = `₹${data.current_balance}`;
-      document.getElementById('customerPill').innerText = customer_id;
-      alertBox.innerHTML = `<div class="alert alert-success" style="margin-top:10px;">✅ Added ₹${amount}. Balance: <strong>₹${data.current_balance}</strong></div>`;
-    } else {
-      alertBox.innerHTML = `<div class="alert alert-error" style="margin-top:10px;">${data.error}</div>`;
+      refreshDashboardData();
+      document.getElementById('walletAlert').innerHTML = `<div class="alert alert-success">Added ₹${amount} successfully!</div>`;
     }
   }
 
   async function createBooking() {
     const payload = {
-      customer_id: document.getElementById('cust_id').value,
-      customer_email: document.getElementById('cust_email').value,
-      consignee_name: document.getElementById('consignee_name').value,
-      consignee_phone: document.getElementById('consignee_phone').value,
+      customer_id: currentUser.customer_id,
+      consignee_name: document.getElementById('consigneeName').value,
+      consignee_phone: document.getElementById('consigneePhone').value,
       consignee_address: 'Main Market Road',
       origin: document.getElementById('origin').value,
       destination: document.getElementById('destination').value,
-      total_boxes: document.getElementById('total_boxes').value,
-      dead_weight_kg: document.getElementById('dead_weight').value
+      total_boxes: document.getElementById('totalBoxes').value,
+      dead_weight_kg: document.getElementById('deadWeight').value
     };
 
     const res = await fetch('/api/indents/create', {
@@ -316,40 +461,30 @@
     labelsGrid.innerHTML = '';
 
     if (data.success) {
-      document.getElementById('balanceDisplay').innerText = `₹${data.remaining_balance}`;
-      
-      // TAX INVOICE BUTTON IN CONFIRMATION BANNER
       out.innerHTML = `
-        <div class="alert alert-success" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 18px;">
-          <div>
-            <strong style="font-size: 15px;">🎉 Indent #${data.docket_id} Confirmed!</strong><br>
-            <span style="font-size: 13px; color: #047857;">Deducted ₹${data.deducted_amount} | Balance: ₹${data.remaining_balance}</span>
-          </div>
-          <a href="/api/invoice/${data.docket_id}" target="_blank" class="btn btn-invoice">
-            <i data-lucide="file-text"></i> Download Tax Invoice (PDF)
-          </a>
+        <div class="alert alert-success" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>🎉 <strong>${data.docket_id}</strong> Booked (-₹${data.deducted_amount})</span>
+          <a href="/api/invoice/${data.docket_id}" target="_blank" style="background:#0f172a; color:white; padding:6px 12px; border-radius:6px; font-size:12px; text-decoration:none;">📄 Invoice</a>
         </div>`;
       
       document.getElementById('labelsContainer').style.display = 'block';
       data.boxes.forEach(b => {
         labelsGrid.innerHTML += `
           <div class="label-card">
-            <div class="label-header">
-              <span>CORRIDOR 9 LOGISTICS</span>
-              <span>Box ${b.box_number} of ${payload.total_boxes}</span>
-            </div>
-            <img class="label-barcode-img" src="${b.barcodeImage}" />
-            <div class="label-route">${payload.origin} ➔ ${payload.destination}</div>
-            <div class="label-meta">${payload.consignee_name} | ${data.quote.chargeableWeight} kg</div>
+            <strong style="font-size:14px;">CORRIDOR 9</strong><br>
+            <small>Box ${b.box_number} of ${payload.total_boxes}</small>
+            <img src="${b.barcodeImage}" />
+            <div style="font-weight:bold; font-size:13px;">${payload.origin} ➔ ${payload.destination}</div>
           </div>`;
       });
+      refreshDashboardData();
     } else {
-      out.innerHTML = `<div class="alert alert-error" style="margin-top:18px;">❌ ${data.message || data.error}</div>`;
+      out.innerHTML = `<div class="alert alert-error">❌ ${data.error}</div>`;
     }
     lucide.createIcons();
   }
 
-  calculateLiveQuote();
+  initApp();
 </script>
 
 </body>
