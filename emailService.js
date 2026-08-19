@@ -1,24 +1,34 @@
-const nodemailer = require('nodemailer');
+let nodemailer;
+try {
+  nodemailer = require('nodemailer');
+} catch (e) {
+  console.warn('⚠️ Nodemailer package not available. Running in mock email mode.');
+}
 
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer ? nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER || 'your-logistics-email@gmail.com',
-    pass: process.env.EMAIL_PASS || 'your-app-password'
+    user: process.env.EMAIL_USER || '',
+    pass: process.env.EMAIL_PASS || ''
   }
-});
+}) : null;
 
 async function sendBookingEmail(toEmail, docket) {
   if (!toEmail) return;
+  if (!transporter || !process.env.EMAIL_USER) {
+    console.log(`ℹ️ [Email Simulation] Booking confirmation for #${docket.docket_id} queued for ${toEmail}`);
+    return;
+  }
+
   const mailOptions = {
-    from: `"Corridor 9 Logistics" <${process.env.EMAIL_USER || 'noreply@corridor9.com'}>`,
+    from: `"Corridor 9 Logistics" <${process.env.EMAIL_USER}>`,
     to: toEmail,
     subject: `📦 Booking Confirmed: Indent #${docket.docket_id}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
         <h2 style="color: #0f172a;">CORRIDOR 9 LOGISTICS</h2>
         <p>Dear <strong>${docket.customer_name}</strong>,</p>
-        <p>Your shipment indent <strong>#${docket.docket_id}</strong> has been booked.</p>
+        <p>Your shipment indent <strong>#${docket.docket_id}</strong> has been booked successfully.</p>
         <table style="width: 100%; font-size: 14px; line-height: 1.6;">
           <tr><td><strong>Origin:</strong></td><td>${docket.origin}</td></tr>
           <tr><td><strong>Destination:</strong></td><td>${docket.destination}</td></tr>
@@ -35,14 +45,19 @@ async function sendBookingEmail(toEmail, docket) {
     await transporter.sendMail(mailOptions);
     console.log(`✉️ Booking email sent to ${toEmail}`);
   } catch (err) {
-    console.error('Email error (Booking):', err.message);
+    console.error('Email send error (Booking):', err.message);
   }
 }
 
 async function sendLREmail(toEmail, docket, lrNumber) {
   if (!toEmail) return;
+  if (!transporter || !process.env.EMAIL_USER) {
+    console.log(`ℹ️ [Email Simulation] e-LR #${lrNumber} queued for ${toEmail}`);
+    return;
+  }
+
   const mailOptions = {
-    from: `"Corridor 9 Logistics" <${process.env.EMAIL_USER || 'noreply@corridor9.com'}>`,
+    from: `"Corridor 9 Logistics" <${process.env.EMAIL_USER}>`,
     to: toEmail,
     subject: `🚚 Pickup Complete: Official e-LR #${lrNumber}`,
     html: `
@@ -60,14 +75,19 @@ async function sendLREmail(toEmail, docket, lrNumber) {
     await transporter.sendMail(mailOptions);
     console.log(`✉️ LR email sent to ${toEmail}`);
   } catch (err) {
-    console.error('Email error (LR):', err.message);
+    console.error('Email send error (LR):', err.message);
   }
 }
 
 async function sendDeliveryEmail(toEmail, docket, receiverName) {
   if (!toEmail) return;
+  if (!transporter || !process.env.EMAIL_USER) {
+    console.log(`ℹ️ [Email Simulation] Delivery POD queued for ${toEmail}`);
+    return;
+  }
+
   const mailOptions = {
-    from: `"Corridor 9 Logistics" <${process.env.EMAIL_USER || 'noreply@corridor9.com'}>`,
+    from: `"Corridor 9 Logistics" <${process.env.EMAIL_USER}>`,
     to: toEmail,
     subject: `✅ Delivered: Shipment #${docket.docket_id}`,
     html: `
@@ -82,7 +102,7 @@ async function sendDeliveryEmail(toEmail, docket, receiverName) {
     await transporter.sendMail(mailOptions);
     console.log(`✉️ Delivery email sent to ${toEmail}`);
   } catch (err) {
-    console.error('Email error (Delivery):', err.message);
+    console.error('Email send error (Delivery):', err.message);
   }
 }
 
