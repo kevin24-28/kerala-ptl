@@ -10,122 +10,665 @@ const { sendBookingEmail, sendLREmail, sendDeliveryEmail } = require('./emailSer
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // ==========================================
-// 1. EMBEDDED HTML: OPERATIONS SCANNER (/ops)
+// UNIFIED PORTAL SINGLE-PAGE APPLICATION
 // ==========================================
-const opsHtml = `<!DOCTYPE html>
+const unifiedPortalHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Corridor 9 | Ground Operations Scanner</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <title>Corridor 9 | Unified Logistics Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #0f172a; --brand: #2563eb; --bg: #f8fafc; --border: #e2e8f0; --radius: 12px; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { background-color: var(--bg); color: var(--primary); min-height: 100vh; padding: 20px 14px; }
-    .container { max-width: 600px; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-    .card { background: white; border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
-    .card-title { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px; }
-    input, select { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
+    :root {
+      --primary: #0f172a;
+      --brand: #2563eb;
+      --brand-hover: #1d4ed8;
+      --accent: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 14px;
+      --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; padding: 24px 16px; }
+    .container { max-width: 1160px; margin: 0 auto; }
+
+    /* Top Bar */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #0f172a, #2563eb); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; }
+    .brand-title { font-size: 20px; font-weight: 800; color: var(--primary); }
+    
+    /* Gate Switcher */
+    .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 40px auto 24px; max-width: 900px; }
+    .role-card { background: white; border: 2px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s ease; }
+    .role-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .role-card.active { border-color: var(--brand); background: #f0f7ff; }
+    .role-icon { font-size: 32px; margin-bottom: 10px; }
+
+    .auth-box { max-width: 440px; margin: 0 auto 50px; background: white; padding: 32px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .auth-tab-btn { background: none; border: none; font-size: 14px; font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 6px 12px; }
+    .auth-tab-btn.active { color: var(--brand); border-bottom: 2px solid var(--brand); }
+
+    /* Form Controls */
+    .form-group { margin-bottom: 14px; text-align: left; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
     input:focus, select:focus { outline: none; border-color: var(--brand); }
-    .btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; }
+    .btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .btn-primary { background: var(--brand); color: white; }
     .btn-dark { background: var(--primary); color: white; }
-    .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: #334155; }
+    .btn-logout { background: #fee2e2; color: #991b1b; padding: 6px 14px; font-size: 12px; border-radius: 6px; font-weight: 700; border: none; cursor: pointer; }
+
+    /* Dashboard Layouts */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); }
+    .stat-label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+    .stat-value { font-size: 26px; font-weight: 800; margin-top: 6px; }
+
+    .dash-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 24px; }
+    @media (max-width: 860px) { .dash-grid { grid-template-columns: 1fr; } }
+    .card { background: white; border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); margin-bottom: 24px; }
+    .card-title { font-size: 16px; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    th { background: #f8fafc; text-align: left; padding: 10px; color: #64748b; font-weight: 700; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
+    .status-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .st-created { background: #fef3c7; color: #92400e; }
+    .st-picked { background: #e0f2fe; color: #0369a1; }
+    .st-transit { background: #f3e8ff; color: #6b21a8; }
+    .st-delivered { background: #dcfce7; color: #15803d; }
+
+    .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-top: 12px; text-align: left; }
     .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
     .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .tab-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-    .tab-btn { background: #e2e8f0; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; color: #475569; }
-    .tab-btn.active { background: var(--primary); color: white; }
+    .labels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 14px; }
+    .label-card { background: white; border: 2px dashed #0f172a; border-radius: 8px; padding: 14px; text-align: center; }
+    .label-card img { width: 100%; height: 65px; object-fit: contain; margin: 6px 0; }
   </style>
 </head>
 <body>
+
 <div class="container">
+  <!-- Top Unified Header -->
   <header class="header">
-    <div>
-      <strong style="font-size: 18px;">CORRIDOR 9 OPS</strong>
-      <div style="font-size:11px; color:#64748b;">Ground Staff & Driver Scanner</div>
+    <div class="brand">
+      <div class="brand-icon">C9</div>
+      <div>
+        <h1 class="brand-title">CORRIDOR 9 LOGISTICS</h1>
+        <div style="font-size:12px; color:var(--text-muted);">Scheduled Express PTL Linehaul Network (NH-66)</div>
+      </div>
     </div>
-    <span style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:6px; font-weight:bold;">PIN: 1234</span>
+    <div id="sessionHeaderActions" style="display:none; align-items:center; gap:12px;">
+      <div style="text-align:right;">
+        <strong id="sessionUserName" style="font-size:14px;">User</strong><br>
+        <span id="sessionBadge" style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-weight:700;">Role</span>
+      </div>
+      <button class="btn-logout" onclick="logoutCurrentSession()">Sign Out</button>
+    </div>
   </header>
 
-  <div id="pinGate" class="card" style="margin-top: 40px;">
-    <div class="card-title">🔒 Ground Operations Access</div>
-    <div class="form-group">
-      <label>Staff Security PIN</label>
-      <input type="password" id="staffPin" placeholder="Enter PIN (1234)" autofocus />
+  <!-- ========================================== -->
+  <!-- 1. LANDING & UNIFIED ROLE SELECTOR GATE    -->
+  <!-- ========================================== -->
+  <div id="roleSelectorSection">
+    <div style="text-align: center; margin-top: 20px;">
+      <h2 style="font-size: 24px; font-weight: 800;">Welcome to Corridor 9 Hub</h2>
+      <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Select your portal below to sign in:</p>
     </div>
-    <button class="btn btn-primary" onclick="checkPin()">Unlock Scanner Console</button>
-    <div id="pinAlert"></div>
+
+    <div class="role-grid">
+      <div class="role-card" id="cardMerchant" onclick="selectRole('merchant')">
+        <div class="role-icon">🏢</div>
+        <strong style="font-size:16px;">Merchant Client</strong>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Book consignments, wallet balance, print barcodes & tax invoices.</p>
+      </div>
+
+      <div class="role-card" id="cardOps" onclick="selectRole('ops')">
+        <div class="role-icon">🚚</div>
+        <strong style="font-size:16px;">Ground Operations</strong>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Driver first-mile pickup scanner & warehouse bay cross-dock inward.</p>
+      </div>
+
+      <div class="role-card" id="cardAdmin" onclick="selectRole('admin')">
+        <div class="role-icon">🛡️</div>
+        <strong style="font-size:16px;">Master Control Tower</strong>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Gross network revenue, merchant accounts, and live consignment feed.</p>
+      </div>
+    </div>
+
+    <!-- MERCHANT AUTH FORM -->
+    <div id="merchantAuthBox" class="auth-box">
+      <div class="auth-tabs">
+        <button id="mTabLogin" class="auth-tab-btn active" onclick="switchMerchantTab('login')">Sign In</button>
+        <button id="mTabReg" class="auth-tab-btn" onclick="switchMerchantTab('reg')">Create Account (+₹2,000 Bonus)</button>
+      </div>
+
+      <form id="merchantLoginForm" onsubmit="handleMerchantLogin(event)">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="mLoginEmail" required placeholder="merchant@business.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="mLoginPassword" required placeholder="••••••••" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px;">Sign In to Merchant Desk</button>
+      </form>
+
+      <form id="merchantRegisterForm" style="display:none;" onsubmit="handleMerchantRegister(event)">
+        <div class="form-group">
+          <label>Company / Firm Name</label>
+          <input type="text" id="mRegCompany" required placeholder="Malabar Traders" />
+        </div>
+        <div class="form-group">
+          <label>Contact Person</label>
+          <input type="text" id="mRegName" required placeholder="Rahul V." />
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="tel" id="mRegPhone" required placeholder="9847000000" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="mRegEmail" required placeholder="trader@gmail.com" />
+        </div>
+        <div class="form-group">
+          <label>Create Password</label>
+          <input type="password" id="mRegPass" required placeholder="••••••••" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:16px;">Register & Claim ₹2,000 Credit</button>
+      </form>
+      <div id="merchantAlert"></div>
+    </div>
+
+    <!-- OPS PIN GATE -->
+    <div id="opsAuthBox" class="auth-box" style="display:none;">
+      <h3 style="font-size:16px; margin-bottom:6px;">🚚 Ground Crew Security Verification</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Enter your staff security PIN to unlock the scanner console:</p>
+      <div class="form-group">
+        <label>Staff PIN (Default: 1234)</label>
+        <input type="password" id="opsPinInput" placeholder="Enter PIN (1234)" autofocus />
+      </div>
+      <button class="btn btn-dark" onclick="verifyOpsPin()">Unlock Ops Console</button>
+      <div id="opsAlert"></div>
+    </div>
+
+    <!-- ADMIN PIN GATE -->
+    <div id="adminAuthBox" class="auth-box" style="display:none;">
+      <h3 style="font-size:16px; margin-bottom:6px;">🛡️ Super-Admin Verification</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Enter the Master Administrator PIN:</p>
+      <div class="form-group">
+        <label>Master PIN (Default: 9999)</label>
+        <input type="password" id="adminPinInput" placeholder="Enter PIN (9999)" autofocus />
+      </div>
+      <button class="btn btn-primary" onclick="verifyAdminPin()">Unlock Control Tower</button>
+      <div id="adminAlert"></div>
+    </div>
   </div>
 
-  <div id="opsConsole" style="display:none;">
-    <div class="tab-row">
-      <button id="tabPickupBtn" class="tab-btn active" onclick="switchOpsTab('pickup')">1. Driver Pickup</button>
-      <button id="tabInwardBtn" class="tab-btn" onclick="switchOpsTab('inward')">2. Hub Inward</button>
+  <!-- ========================================== -->
+  <!-- 2. MERCHANT DASHBOARD VIEW                 -->
+  <!-- ========================================== -->
+  <div id="merchantDashboardSection" style="display:none;">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Prepaid Balance</div>
+        <div class="stat-value" id="mStatBalance" style="color:var(--brand);">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Shipments</div>
+        <div class="stat-value" id="mStatTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">In Transit</div>
+        <div class="stat-value" id="mStatActive" style="color:var(--warning);">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Delivered</div>
+        <div class="stat-value" id="mStatDelivered" style="color:var(--accent);">0</div>
+      </div>
     </div>
 
-    <div id="pickupSection" class="card">
-      <div class="card-title">🚚 First-Mile Box Pickup</div>
+    <div class="dash-grid">
+      <!-- Wallet Panel -->
+      <div>
+        <div class="card">
+          <div class="card-title"><span>💳 Wallet Top-Up</span></div>
+          <div class="form-group">
+            <label>Recharge Amount (₹)</label>
+            <input type="number" id="mTopupAmt" value="5000" step="500" />
+          </div>
+          <button class="btn btn-outline" onclick="topupMerchantWallet()">Add Funds</button>
+          <div id="mWalletAlert"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>📜 Wallet Passbook</span></div>
+          <div style="max-height: 220px; overflow-y: auto;">
+            <table id="mTxnTable">
+              <thead><tr><th>Type</th><th>Details</th><th>Amount</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consignment Indent Booking -->
+      <div>
+        <div class="card">
+          <div class="card-title"><span>📦 Book Linehaul Consignment</span></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Origin Hub</label>
+              <select id="mOrigin">
+                <option value="Kochi">Kochi (Aluva Mother Hub)</option>
+                <option value="Thrissur">Thrissur Hub</option>
+                <option value="Kozhikode">Kozhikode Hub</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Destination Terminal</label>
+              <select id="mDestination">
+                <option value="Kozhikode">Kozhikode (Valiyangadi Direct)</option>
+                <option value="Trivandrum">Trivandrum Hub</option>
+                <option value="Thrissur">Thrissur Hub</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Consignee Name</label>
+              <input type="text" id="mConsigneeName" value="Malabar Traders" />
+            </div>
+            <div class="form-group">
+              <label>Consignee Phone</label>
+              <input type="text" id="mConsigneePhone" value="9876543210" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cartons Count</label>
+              <input type="number" id="mTotalBoxes" value="2" min="1" oninput="calcMerchantQuote()" />
+            </div>
+            <div class="form-group">
+              <label>Dead Weight (kg)</label>
+              <input type="number" id="mDeadWeight" value="120" min="1" oninput="calcMerchantQuote()" />
+            </div>
+          </div>
+
+          <div style="background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:14px; font-size:13px;">
+            Estimated Total Freight (incl. GST): <strong id="mQuoteDisplay" style="color:var(--brand);">₹888</strong>
+          </div>
+
+          <button class="btn btn-primary" onclick="createMerchantBooking()">Confirm Booking & Deduct Freight</button>
+          <div id="mBookingResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thermal Labels -->
+    <div id="mLabelsContainer" class="card" style="display:none;">
+      <div class="card-title">
+        <span>Ready-to-Print Thermal Labels</span>
+        <button class="btn btn-outline" style="width:auto; padding:6px 14px;" onclick="window.print()">🖨️ Print Labels</button>
+      </div>
+      <div id="mLabelsOutput" class="labels-grid"></div>
+    </div>
+
+    <!-- Merchant Shipments History -->
+    <div class="card">
+      <div class="card-title"><span>🚚 Consignment History</span></div>
+      <div style="overflow-x:auto;">
+        <table id="mDocketsTable">
+          <thead>
+            <tr><th>Docket #</th><th>Destination</th><th>Boxes/Wt</th><th>Status</th><th>Invoice</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. OPERATIONS SCANNER VIEW                 -->
+  <!-- ========================================== -->
+  <div id="opsDashboardSection" style="display:none; max-width:640px; margin:auto;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
+      <button id="opsTabP" class="btn btn-dark" onclick="switchOpsTabMode('pickup')">1. Driver Pickup</button>
+      <button id="opsTabI" class="btn btn-outline" onclick="switchOpsTabMode('inward')">2. Hub Inward</button>
+    </div>
+
+    <div id="opsPickupCard" class="card">
+      <div class="card-title">🚚 Driver Box Pickup Scanner</div>
       <div class="form-group">
-        <label>Driver ID / Vehicle</label>
-        <input type="text" id="driverId" value="DRV-ALUVA-01" />
+        <label>Driver ID / Truck</label>
+        <input type="text" id="opsDriverId" value="DRV-ALUVA-01" />
       </div>
       <div class="form-group">
         <label>Scan Box Barcode (e.g. C9-123456-B1)</label>
-        <input type="text" id="pickupBarcode" placeholder="Scan or paste barcode..." />
+        <input type="text" id="opsPickupBarcode" placeholder="Scan or type barcode..." />
       </div>
-      <button class="btn btn-primary" onclick="submitPickupScan()">Confirm Pickup Scan</button>
-      <div id="pickupAlert"></div>
+      <button class="btn btn-primary" onclick="submitOpsPickup()">Confirm Box Pickup</button>
+      <div id="opsPickupResult"></div>
     </div>
 
-    <div id="inwardSection" class="card" style="display:none;">
-      <div class="card-title">🏢 Central Hub Inward Sorting</div>
+    <div id="opsInwardCard" class="card" style="display:none;">
+      <div class="card-title">🏢 Hub Inward & Bay Routing</div>
       <div class="form-group">
-        <label>Hub Location</label>
-        <select id="hubLocation">
+        <label>Current Hub Facility</label>
+        <select id="opsHubLocation">
           <option value="Kochi Central Mother Hub">Kochi Central Mother Hub (Aluva)</option>
           <option value="Thrissur Hub">Thrissur Hub</option>
           <option value="Kozhikode Hub">Kozhikode Hub</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Scan Box Barcode</label>
-        <input type="text" id="inwardBarcode" placeholder="Scan barcode for bay route..." />
+        <label>Scan Box Barcode for Bay Direction</label>
+        <input type="text" id="opsInwardBarcode" placeholder="Scan barcode..." />
       </div>
-      <button class="btn btn-dark" onclick="submitInwardScan()">Scan & Get Bay Location</button>
-      <div id="inwardAlert"></div>
+      <button class="btn btn-dark" onclick="submitOpsInward()">Scan & Direct Bay</button>
+      <div id="opsInwardResult"></div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. MASTER CONTROL TOWER (SUPER-ADMIN) VIEW -->
+  <!-- ========================================== -->
+  <div id="adminDashboardSection" style="display:none;">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Gross Freight Revenue</div>
+        <div class="stat-value" id="adStatRevenue" style="color:var(--brand);">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Corridor Shipments</div>
+        <div class="stat-value" id="adStatTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active in Transit</div>
+        <div class="stat-value" id="adStatActive" style="color:var(--warning);">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Registered Merchants</div>
+        <div class="stat-value" id="adStatMerchants" style="color:var(--accent);">0</div>
+      </div>
+    </div>
+
+    <!-- Master Shipments -->
+    <div class="card">
+      <div class="card-title">
+        <span>📦 All Consignments (Telemetry Feed)</span>
+        <button class="btn btn-primary" style="width:auto; padding:6px 12px; font-size:12px;" onclick="loadAdminMasterData()">🔄 Refresh Feed</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="adShipmentsTable">
+          <thead>
+            <tr>
+              <th>Docket #</th><th>Date</th><th>Shipper</th><th>Consignee</th>
+              <th>Route</th><th>Boxes/Wt</th><th>Freight</th><th>Status</th><th>Invoice</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Master Merchants -->
+    <div class="card">
+      <div class="card-title"><span>👥 Registered Merchants & Wallets</span></div>
+      <div style="overflow-x:auto;">
+        <table id="adMerchantsTable">
+          <thead>
+            <tr>
+              <th>Customer ID</th><th>Company</th><th>Name</th><th>Email</th><th>Phone</th><th>Balance</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-  function checkPin() {
-    if (document.getElementById('staffPin').value === '1234') {
-      document.getElementById('pinGate').style.display = 'none';
-      document.getElementById('opsConsole').style.display = 'block';
+  let activeRole = 'merchant';
+  let currentMerchant = JSON.parse(localStorage.getItem('c9_merchant_session') || 'null');
+
+  function initApp() {
+    if (currentMerchant && currentMerchant.customer_id) {
+      launchMerchantDashboard();
     } else {
-      document.getElementById('pinAlert').innerHTML = '<div class="alert alert-error">Invalid Staff PIN.</div>';
+      selectRole('merchant');
     }
   }
 
-  function switchOpsTab(tab) {
-    document.getElementById('tabPickupBtn').className = tab === 'pickup' ? 'tab-btn active' : 'tab-btn';
-    document.getElementById('tabInwardBtn').className = tab === 'inward' ? 'tab-btn active' : 'tab-btn';
-    document.getElementById('pickupSection').style.display = tab === 'pickup' ? 'block' : 'none';
-    document.getElementById('inwardSection').style.display = tab === 'inward' ? 'block' : 'none';
+  function selectRole(role) {
+    activeRole = role;
+    document.getElementById('cardMerchant').className = role === 'merchant' ? 'role-card active' : 'role-card';
+    document.getElementById('cardOps').className = role === 'ops' ? 'role-card active' : 'role-card';
+    document.getElementById('cardAdmin').className = role === 'admin' ? 'role-card active' : 'role-card';
+
+    document.getElementById('merchantAuthBox').style.display = role === 'merchant' ? 'block' : 'none';
+    document.getElementById('opsAuthBox').style.display = role === 'ops' ? 'block' : 'none';
+    document.getElementById('adminAuthBox').style.display = role === 'admin' ? 'block' : 'none';
   }
 
-  async function submitPickupScan() {
-    const box_barcode = document.getElementById('pickupBarcode').value.trim();
-    const driver_id = document.getElementById('driverId').value.trim();
-    if (!box_barcode) return alert('Please enter barcode.');
+  function logoutCurrentSession() {
+    localStorage.removeItem('c9_merchant_session');
+    currentMerchant = null;
+    document.getElementById('sessionHeaderActions').style.display = 'none';
+    document.getElementById('merchantDashboardSection').style.display = 'none';
+    document.getElementById('opsDashboardSection').style.display = 'none';
+    document.getElementById('adminDashboardSection').style.display = 'none';
+    document.getElementById('roleSelectorSection').style.display = 'block';
+    selectRole('merchant');
+  }
+
+  // --- MERCHANT AUTH & LOGIC ---
+  function switchMerchantTab(tab) {
+    document.getElementById('mTabLogin').className = tab === 'login' ? 'auth-tab-btn active' : 'auth-tab-btn';
+    document.getElementById('mTabReg').className = tab === 'reg' ? 'auth-tab-btn active' : 'auth-tab-btn';
+    document.getElementById('merchantLoginForm').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('merchantRegisterForm').style.display = tab === 'reg' ? 'block' : 'none';
+    document.getElementById('merchantAlert').innerHTML = '';
+  }
+
+  async function handleMerchantLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('mLoginEmail').value.trim();
+    const password = document.getElementById('mLoginPassword').value.trim();
+
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.success && data.user) {
+      currentMerchant = data.user;
+      localStorage.setItem('c9_merchant_session', JSON.stringify(currentMerchant));
+      launchMerchantDashboard();
+    } else {
+      document.getElementById('merchantAlert').innerHTML = '<div class="alert alert-error">' + (data.error || 'Login failed') + '</div>';
+    }
+  }
+
+  async function handleMerchantRegister(e) {
+    e.preventDefault();
+    const payload = {
+      company: document.getElementById('mRegCompany').value.trim(),
+      name: document.getElementById('mRegName').value.trim(),
+      phone: document.getElementById('mRegPhone').value.trim(),
+      email: document.getElementById('mRegEmail').value.trim(),
+      password: document.getElementById('mRegPass').value.trim()
+    };
+
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success && data.user) {
+      currentMerchant = data.user;
+      localStorage.setItem('c9_merchant_session', JSON.stringify(currentMerchant));
+      launchMerchantDashboard();
+    } else {
+      document.getElementById('merchantAlert').innerHTML = '<div class="alert alert-error">' + (data.error || 'Registration failed') + '</div>';
+    }
+  }
+
+  async function launchMerchantDashboard() {
+    document.getElementById('roleSelectorSection').style.display = 'none';
+    document.getElementById('merchantDashboardSection').style.display = 'block';
+    document.getElementById('sessionHeaderActions').style.display = 'flex';
+    document.getElementById('sessionUserName').innerText = currentMerchant.company || currentMerchant.name;
+    document.getElementById('sessionBadge').innerText = currentMerchant.customer_id;
+    await refreshMerchantDashboard();
+    calcMerchantQuote();
+  }
+
+  async function refreshMerchantDashboard() {
+    if (!currentMerchant) return;
+    const res = await fetch('/api/merchant/dashboard/' + currentMerchant.customer_id);
+    const data = await res.json();
+    if (!data.success) return;
+
+    document.getElementById('mStatBalance').innerText = '₹' + data.stats.wallet_balance;
+    document.getElementById('mStatTotal').innerText = data.stats.total_shipments;
+    document.getElementById('mStatActive').innerText = data.stats.active_shipments;
+    document.getElementById('mStatDelivered').innerText = data.stats.delivered_shipments;
+
+    const txnBody = document.querySelector('#mTxnTable tbody');
+    txnBody.innerHTML = (data.transactions && data.transactions.length) ? data.transactions.map(t => \`
+      <tr>
+        <td><strong style="font-size:11px;">\${t.type}</strong></td>
+        <td>\${t.description}</td>
+        <td style="color:\${t.type === 'FREIGHT_DEDUCT' ? '#dc2626' : '#16a34a'}; font-weight:bold;">
+          \${t.type === 'FREIGHT_DEDUCT' ? '-' : '+'}₹\${t.amount}
+        </td>
+      </tr>
+    \`).join('') : '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">No transactions yet.</td></tr>';
+
+    const docketBody = document.querySelector('#mDocketsTable tbody');
+    docketBody.innerHTML = (data.recent_dockets && data.recent_dockets.length) ? data.recent_dockets.map(d => \`
+      <tr>
+        <td><strong>\${d.docket_id}</strong><br><small style="color:#64748b;">\${new Date(d.created_at).toLocaleDateString()}</small></td>
+        <td>\${d.origin} ➔ \${d.destination}<br><small>\${d.consignee_name}</small></td>
+        <td>\${d.total_boxes} bxs (\${d.chargeable_weight_kg} kg)</td>
+        <td><span class="status-badge \${d.status === 'DELIVERED' ? 'st-delivered' : d.status === 'PICKED_UP' ? 'st-picked' : 'st-created'}">\${d.status}</span></td>
+        <td><a href="/api/invoice/\${d.docket_id}" target="_blank" style="color:var(--brand); font-weight:bold; text-decoration:none;">📄 Invoice</a></td>
+      </tr>
+    \`).join('') : '<tr><td colspan="5" style="text-align:center; color:#94a3b8;">No consignments booked yet.</td></tr>';
+  }
+
+  function calcMerchantQuote() {
+    const deadWeight = Number(document.getElementById('mDeadWeight').value) || 0;
+    const base = Math.max(deadWeight * 5.5, 350);
+    const total = Math.round((base + (base * 0.10) + 120) * 1.05);
+    document.getElementById('mQuoteDisplay').innerText = '₹' + total;
+  }
+
+  async function topupMerchantWallet() {
+    const amount = document.getElementById('mTopupAmt').value;
+    const res = await fetch('/api/wallet/topup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id: currentMerchant.customer_id, amount })
+    });
+    const data = await res.json();
+    if (data.success) {
+      refreshMerchantDashboard();
+      document.getElementById('mWalletAlert').innerHTML = '<div class="alert alert-success">Added ₹' + amount + ' successfully!</div>';
+    }
+  }
+
+  async function createMerchantBooking() {
+    const payload = {
+      customer_id: currentMerchant.customer_id,
+      consignee_name: document.getElementById('mConsigneeName').value,
+      consignee_phone: document.getElementById('mConsigneePhone').value,
+      consignee_address: 'Main Market Road',
+      origin: document.getElementById('mOrigin').value,
+      destination: document.getElementById('mDestination').value,
+      total_boxes: document.getElementById('mTotalBoxes').value,
+      dead_weight_kg: document.getElementById('mDeadWeight').value
+    };
+
+    const res = await fetch('/api/indents/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    const out = document.getElementById('mBookingResult');
+    const labelsGrid = document.getElementById('mLabelsOutput');
+    labelsGrid.innerHTML = '';
+
+    if (data.success) {
+      out.innerHTML = \`
+        <div class="alert alert-success" style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+          <span>🎉 <strong>\${data.docket_id}</strong> Booked (-₹\${data.deducted_amount})</span>
+          <a href="/api/invoice/\${data.docket_id}" target="_blank" style="background:#0f172a; color:white; padding:6px 12px; border-radius:6px; font-size:12px; text-decoration:none;">📄 Invoice</a>
+        </div>\`;
+      document.getElementById('mLabelsContainer').style.display = 'block';
+      data.boxes.forEach(b => {
+        labelsGrid.innerHTML += \`
+          <div class="label-card">
+            <strong style="font-size:13px;">CORRIDOR 9</strong><br>
+            <small>Box \${b.box_number} of \${payload.total_boxes}</small>
+            <img src="\${b.barcodeImage}" />
+            <div style="font-weight:bold; font-size:12px;">\${payload.origin} ➔ \${payload.destination}</div>
+          </div>\`;
+      });
+      refreshMerchantDashboard();
+    } else {
+      out.innerHTML = '<div class="alert alert-error" style="margin-top:12px;">❌ ' + data.error + '</div>';
+    }
+  }
+
+  // --- OPS AUTH & LOGIC ---
+  function verifyOpsPin() {
+    if (document.getElementById('opsPinInput').value === '1234') {
+      document.getElementById('roleSelectorSection').style.display = 'none';
+      document.getElementById('opsDashboardSection').style.display = 'block';
+      document.getElementById('sessionHeaderActions').style.display = 'flex';
+      document.getElementById('sessionUserName').innerText = 'Ground Staff';
+      document.getElementById('sessionBadge').innerText = 'OPERATIONS';
+    } else {
+      document.getElementById('opsAlert').innerHTML = '<div class="alert alert-error">Invalid Staff PIN.</div>';
+    }
+  }
+
+  function switchOpsTabMode(tab) {
+    document.getElementById('opsTabP').className = tab === 'pickup' ? 'btn btn-dark' : 'btn btn-outline';
+    document.getElementById('opsTabI').className = tab === 'inward' ? 'btn btn-dark' : 'btn btn-outline';
+    document.getElementById('opsPickupCard').style.display = tab === 'pickup' ? 'block' : 'none';
+    document.getElementById('opsInwardCard').style.display = tab === 'inward' ? 'block' : 'none';
+  }
+
+  async function submitOpsPickup() {
+    const box_barcode = document.getElementById('opsPickupBarcode').value.trim();
+    const driver_id = document.getElementById('opsDriverId').value.trim();
+    if (!box_barcode) return alert('Enter a box barcode.');
 
     const res = await fetch('/api/scan/pickup', {
       method: 'POST',
@@ -133,20 +676,20 @@ const opsHtml = `<!DOCTYPE html>
       body: JSON.stringify({ box_barcode, driver_id, location: 'Merchant Doorstep' })
     });
     const data = await res.json();
-    const alertBox = document.getElementById('pickupAlert');
+    const alertBox = document.getElementById('opsPickupResult');
     if (data.success) {
-      let lrMsg = data.all_boxes_picked ? '<br><strong>🎉 All Boxes Picked! Generated ' + data.lr_number + '</strong>' : '';
+      let lrMsg = data.all_boxes_picked ? '<br><strong>🎉 All Boxes Scanned! Generated ' + data.lr_number + '</strong>' : '';
       alertBox.innerHTML = '<div class="alert alert-success">✅ ' + data.message + lrMsg + '</div>';
-      document.getElementById('pickupBarcode').value = '';
+      document.getElementById('opsPickupBarcode').value = '';
     } else {
       alertBox.innerHTML = '<div class="alert alert-error">❌ ' + data.error + '</div>';
     }
   }
 
-  async function submitInwardScan() {
-    const box_barcode = document.getElementById('inwardBarcode').value.trim();
-    const hub_name = document.getElementById('hubLocation').value;
-    if (!box_barcode) return alert('Please enter barcode.');
+  async function submitOpsInward() {
+    const box_barcode = document.getElementById('opsInwardBarcode').value.trim();
+    const hub_name = document.getElementById('opsHubLocation').value;
+    if (!box_barcode) return alert('Enter a box barcode.');
 
     const res = await fetch('/api/scan/warehouse-inward', {
       method: 'POST',
@@ -154,170 +697,40 @@ const opsHtml = `<!DOCTYPE html>
       body: JSON.stringify({ box_barcode, warehouse_staff_id: 'STAFF-HUB-01', hub_name })
     });
     const data = await res.json();
-    const alertBox = document.getElementById('inwardAlert');
+    const alertBox = document.getElementById('opsInwardResult');
     if (data.success) {
       alertBox.innerHTML = '<div class="alert alert-success">📦 <strong>' + data.box_barcode + '</strong> Inward Complete.<br><span style="font-size:16px; font-weight:800; color:#1e3a8a;">👉 ' + data.route_instruction + '</span></div>';
-      document.getElementById('inwardBarcode').value = '';
+      document.getElementById('opsInwardBarcode').value = '';
     } else {
       alertBox.innerHTML = '<div class="alert alert-error">❌ ' + data.error + '</div>';
     }
   }
-</script>
-</body>
-</html>`;
 
-// ==========================================
-// 2. EMBEDDED HTML: MASTER ADMIN (/admin)
-// ==========================================
-const adminHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Corridor 9 | Master Control Tower</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root { --primary: #0f172a; --brand: #2563eb; --accent: #10b981; --warning: #f59e0b; --bg: #f8fafc; --border: #e2e8f0; --radius: 12px; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { background-color: var(--bg); color: var(--primary); min-height: 100vh; padding: 24px 16px; }
-    .container { max-width: 1200px; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-    .brand-title { font-size: 22px; font-weight: 800; }
-    .admin-pill { background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; }
-    .pin-card { max-width: 400px; margin: 80px auto; background: white; padding: 32px; border-radius: var(--radius); border: 1px solid var(--border); }
-    input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; margin-top: 8px; }
-    .btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; margin-top: 14px; }
-    .btn-primary { background: var(--brand); color: white; }
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .kpi-card { background: white; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); }
-    .kpi-label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; }
-    .kpi-value { font-size: 26px; font-weight: 800; margin-top: 6px; }
-    .card { background: white; border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); margin-bottom: 24px; }
-    .card-title { font-size: 16px; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-    th { background: #f8fafc; text-align: left; padding: 10px; color: #64748b; font-weight: 700; border-bottom: 1px solid var(--border); }
-    td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
-    .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
-    .st-created { background: #fef3c7; color: #92400e; }
-    .st-picked { background: #e0f2fe; color: #0369a1; }
-    .st-delivered { background: #dcfce7; color: #15803d; }
-  </style>
-</head>
-<body>
-<div class="container">
-  <header class="header">
-    <div>
-      <h1 class="brand-title">CORRIDOR 9 <span class="admin-pill">MASTER CONTROL TOWER</span></h1>
-      <div style="font-size:12px; color:#64748b;">NH-66 Central Network Operations & Revenue Ledger</div>
-    </div>
-    <button id="adminLogoutBtn" class="btn" style="width:auto; margin:0; padding:6px 14px; background:#f1f5f9; color:#334155; display:none;" onclick="adminLogout()">Sign Out</button>
-  </header>
-
-  <div id="adminPinGate" class="pin-card">
-    <h2 style="font-size:18px; margin-bottom:6px;">🔒 Super-Admin Verification</h2>
-    <p style="font-size:13px; color:#64748b; margin-bottom:14px;">Enter the Master Administrator PIN:</p>
-    <input type="password" id="adminPinInput" placeholder="Enter PIN (Default: 9999)" autofocus />
-    <button class="btn btn-primary" onclick="verifyAdminPin()">Unlock Control Tower</button>
-    <div id="pinError" style="color:red; font-size:12px; margin-top:8px;"></div>
-  </div>
-
-  <div id="adminContent" style="display:none;">
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Gross Freight Revenue</div>
-        <div class="kpi-value" id="kpiRevenue" style="color:var(--brand);">₹0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Total Consignments</div>
-        <div class="kpi-value" id="kpiTotalShipments">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Active In Transit</div>
-        <div class="kpi-value" id="kpiActiveShipments" style="color:var(--warning);">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Registered Merchants</div>
-        <div class="kpi-value" id="kpiMerchants" style="color:var(--accent);">0</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">
-        <span>📦 All Corridor Consignments</span>
-        <button class="btn btn-primary" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="loadAdminData()">🔄 Refresh</button>
-      </div>
-      <div style="overflow-x:auto;">
-        <table id="adminShipmentsTable">
-          <thead>
-            <tr>
-              <th>Docket #</th>
-              <th>Date</th>
-              <th>Shipper</th>
-              <th>Consignee</th>
-              <th>Route</th>
-              <th>Boxes/Wt</th>
-              <th>Freight</th>
-              <th>Status</th>
-              <th>Invoice</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span>👥 Registered Merchants & Wallets</span></div>
-      <div style="overflow-x:auto;">
-        <table id="adminMerchantsTable">
-          <thead>
-            <tr>
-              <th>Customer ID</th>
-              <th>Company</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Wallet Balance</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
+  // --- ADMIN AUTH & LOGIC ---
   function verifyAdminPin() {
-    if (document.getElementById('adminPinInput').value === "9999") {
-      document.getElementById('adminPinGate').style.display = 'none';
-      document.getElementById('adminContent').style.display = 'block';
-      document.getElementById('adminLogoutBtn').style.display = 'block';
-      loadAdminData();
+    if (document.getElementById('adminPinInput').value === '9999') {
+      document.getElementById('roleSelectorSection').style.display = 'none';
+      document.getElementById('adminDashboardSection').style.display = 'block';
+      document.getElementById('sessionHeaderActions').style.display = 'flex';
+      document.getElementById('sessionUserName').innerText = 'Administrator';
+      document.getElementById('sessionBadge').innerText = 'SUPER-ADMIN';
+      loadAdminMasterData();
     } else {
-      document.getElementById('pinError').innerText = 'Invalid Admin Passcode.';
+      document.getElementById('adminAlert').innerHTML = '<div class="alert alert-error">Invalid Master Admin PIN.</div>';
     }
   }
 
-  function adminLogout() {
-    document.getElementById('adminPinGate').style.display = 'block';
-    document.getElementById('adminContent').style.display = 'none';
-    document.getElementById('adminLogoutBtn').style.display = 'none';
-    document.getElementById('adminPinInput').value = '';
-  }
-
-  async function loadAdminData() {
+  async function loadAdminMasterData() {
     const res = await fetch('/api/admin/overview');
     const data = await res.json();
     if (!data.success) return;
 
-    document.getElementById('kpiRevenue').innerText = '₹' + Number(data.summary.total_revenue).toLocaleString('en-IN');
-    document.getElementById('kpiTotalShipments').innerText = data.summary.total_shipments;
-    document.getElementById('kpiActiveShipments').innerText = data.summary.active_shipments;
-    document.getElementById('kpiMerchants').innerText = data.summary.total_merchants;
+    document.getElementById('adStatRevenue').innerText = '₹' + Number(data.summary.total_revenue).toLocaleString('en-IN');
+    document.getElementById('adStatTotal').innerText = data.summary.total_shipments;
+    document.getElementById('adStatActive').innerText = data.summary.active_shipments;
+    document.getElementById('adStatMerchants').innerText = data.summary.total_merchants;
 
-    const sBody = document.querySelector('#adminShipmentsTable tbody');
+    const sBody = document.querySelector('#adShipmentsTable tbody');
     sBody.innerHTML = data.dockets.length ? data.dockets.map(d => \`
       <tr>
         <td><strong>\${d.docket_id}</strong><br><small style="color:#64748b;">\${d.lr_number || ''}</small></td>
@@ -328,11 +741,11 @@ const adminHtml = `<!DOCTYPE html>
         <td>\${d.total_boxes} bxs (\${d.chargeable_weight_kg}kg)</td>
         <td><strong style="color:var(--brand);">₹\${d.total_deducted}</strong></td>
         <td><span class="status-badge \${d.status === 'DELIVERED' ? 'st-delivered' : d.status === 'PICKED_UP' ? 'st-picked' : 'st-created'}">\${d.status}</span></td>
-        <td><a href="/api/invoice/\${d.docket_id}" target="_blank" style="color:var(--brand); font-weight:700; text-decoration:none;">📄 PDF</a></td>
+        <td><a href="/api/invoice/\${d.docket_id}" target="_blank" style="color:var(--brand); font-weight:700; text-decoration:none;">📄 Invoice</a></td>
       </tr>
     \`).join('') : '<tr><td colspan="9" style="text-align:center; color:#94a3b8;">No consignments booked yet.</td></tr>';
 
-    const mBody = document.querySelector('#adminMerchantsTable tbody');
+    const mBody = document.querySelector('#adMerchantsTable tbody');
     mBody.innerHTML = data.merchants.length ? data.merchants.map(m => \`
       <tr>
         <td><code>\${m.customer_id}</code></td>
@@ -347,7 +760,7 @@ const adminHtml = `<!DOCTYPE html>
   }
 
   async function adminAdjustBalance(cid) {
-    const amt = prompt('Add amount in ₹ for ' + cid + ':', '5000');
+    const amt = prompt('Top-up amount in ₹ for ' + cid + ':', '5000');
     if (!amt) return;
     const res = await fetch('/api/wallet/topup', {
       method: 'POST',
@@ -355,28 +768,19 @@ const adminHtml = `<!DOCTYPE html>
       body: JSON.stringify({ customer_id: cid, amount: Number(amt) })
     });
     const d = await res.json();
-    if (d.success) { alert('Added ₹' + amt); loadAdminData(); }
+    if (d.success) { alert('Added ₹' + amt); loadAdminMasterData(); }
   }
+
+  initApp();
 </script>
 </body>
 </html>`;
 
 // ==========================================
-// 3. DIRECT ROUTE HANDLERS
+// UNIFIED PAGE ROUTE
 // ==========================================
-app.get('/ops', (req, res) => res.send(opsHtml));
-app.get('/ops.html', (req, res) => res.send(opsHtml));
-
-app.get('/admin', (req, res) => res.send(adminHtml));
-app.get('/admin.html', (req, res) => res.send(adminHtml));
-
-app.get('/', (req, res) => {
-  const indexPath = path.join(__dirname, 'public', 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.sendFile(path.join(__dirname, 'index.html'));
-  }
+app.get(['/', '/ops', '/admin'], (req, res) => {
+  res.send(unifiedPortalHtml);
 });
 
 // --- SUPER-ADMIN OVERVIEW API ---
@@ -847,5 +1251,5 @@ app.get('/api/invoice/:docket_id', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 initDB().then(() => {
-  app.listen(PORT, () => console.log(`🚀 Corridor 9 Engine running on port ${PORT}`));
+  app.listen(PORT, () => console.log(`🚀 Corridor 9 Unified Engine running on port ${PORT}`));
 });
