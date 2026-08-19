@@ -1,0 +1,21 @@
+JSON
+{
+  "name": "kerala-ptl-system",
+  "version": "1.0.0",
+  "description": "Tech-enabled PTL logistics management system for Kerala corridors",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bwip-js": "^3.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
