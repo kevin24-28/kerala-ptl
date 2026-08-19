@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corridor 9 | Ground Operations Scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0f172a;
+      --brand: #2563eb;
+      --accent: #10b981;
+      --bg: #f8fafc;
+      --border: #e2e8f0;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--primary); min-height: 100vh; padding: 20px 14px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .card { background: white; border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .card-title { font-size: 15px; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
+    input:focus, select:focus { outline: none; border-color: var(--brand); }
+    .btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; }
+    .btn-primary { background: var(--brand); color: white; }
+    .btn-dark { background: var(--primary); color: white; }
+    .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+    .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .tab-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .tab-btn { background: #e2e8f0; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; color: #475569; }
+    .tab-btn.active { background: var(--primary); color: white; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <div>
+      <strong style="font-size: 18px;">CORRIDOR 9 OPS</strong>
+      <div style="font-size:11px; color:#64748b;">Ground Staff & Driver Scanner</div>
+    </div>
+    <span style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:6px; font-weight:bold;">PIN: 1234</span>
+  </header>
+
+  <!-- PIN GATE -->
+  <div id="pinGate" class="card" style="margin-top: 40px;">
+    <div class="card-title">🔒 Ground Operations Access</div>
+    <div class="form-group">
+      <label>Staff Security PIN</label>
+      <input type="password" id="staffPin" placeholder="Enter PIN (1234)" autofocus />
+    </div>
+    <button class="btn btn-primary" onclick="checkPin()">Unlock Scanner Console</button>
+    <div id="pinAlert"></div>
+  </div>
+
+  <!-- OPS CONSOLE -->
+  <div id="opsConsole" style="display:none;">
+    <div class="tab-row">
+      <button id="tabPickupBtn" class="tab-btn active" onclick="switchOpsTab('pickup')">1. Driver Pickup</button>
+      <button id="tabInwardBtn" class="tab-btn" onclick="switchOpsTab('inward')">2. Hub Inward</button>
+    </div>
+
+    <!-- FIRST MILE PICKUP SCANNER -->
+    <div id="pickupSection" class="card">
+      <div class="card-title">🚚 First-Mile Box Pickup</div>
+      <div class="form-group">
+        <label>Driver ID / Vehicle</label>
+        <input type="text" id="driverId" value="DRV-ALUVA-01" />
+      </div>
+      <div class="form-group">
+        <label>Scan Box Barcode (e.g. C9-123456-B1)</label>
+        <input type="text" id="pickupBarcode" placeholder="Scan or paste barcode..." />
+      </div>
+      <button class="btn btn-primary" onclick="submitPickupScan()">Confirm Pickup Scan</button>
+      <div id="pickupAlert"></div>
+    </div>
+
+    <!-- HUB INWARD / ROUTING BAY SCANNER -->
+    <div id="inwardSection" class="card" style="display:none;">
+      <div class="card-title">🏢 Central Hub Inward Sorting</div>
+      <div class="form-group">
+        <label>Hub Location</label>
+        <select id="hubLocation">
+          <option value="Kochi Central Mother Hub">Kochi Central Mother Hub (Aluva)</option>
+          <option value="Thrissur Hub">Thrissur Hub</option>
+          <option value="Kozhikode Hub">Kozhikode Hub</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Scan Box Barcode</label>
+        <input type="text" id="inwardBarcode" placeholder="Scan barcode for bay route..." />
+      </div>
+      <button class="btn btn-dark" onclick="submitInwardScan()">Scan & Get Bay Location</button>
+      <div id="inwardAlert"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function checkPin() {
+    const pin = document.getElementById('staffPin').value;
+    if (pin === '1234') {
+      document.getElementById('pinGate').style.display = 'none';
+      document.getElementById('opsConsole').style.display = 'block';
+    } else {
+      document.getElementById('pinAlert').innerHTML = '<div class="alert alert-error">Invalid Staff PIN.</div>';
+    }
+  }
+
+  function switchOpsTab(tab) {
+    document.getElementById('tabPickupBtn').className = tab === 'pickup' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('tabInwardBtn').className = tab === 'inward' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('pickupSection').style.display = tab === 'pickup' ? 'block' : 'none';
+    document.getElementById('inwardSection').style.display = tab === 'inward' ? 'block' : 'none';
+  }
+
+  async function submitPickupScan() {
+    const box_barcode = document.getElementById('pickupBarcode').value.trim();
+    const driver_id = document.getElementById('driverId').value.trim();
+    if (!box_barcode) return alert('Please enter or scan a barcode.');
+
+    const res = await fetch('/api/scan/pickup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ box_barcode, driver_id, location: 'Merchant Doorstep' })
+    });
+    const data = await res.json();
+    const alertBox = document.getElementById('pickupAlert');
+
+    if (data.success) {
+      let lrMsg = data.all_boxes_picked ? `<br><strong>🎉 All Boxes Scanned! Generated ${data.lr_number}</strong>` : '';
+      alertBox.innerHTML = `<div class="alert alert-success">✅ ${data.message} ${lrMsg}</div>`;
+      document.getElementById('pickupBarcode').value = '';
+    } else {
+      alertBox.innerHTML = `<div class="alert alert-error">❌ ${data.error}</div>`;
+    }
+  }
+
+  async function submitInwardScan() {
+    const box_barcode = document.getElementById('inwardBarcode').value.trim();
+    const hub_name = document.getElementById('hubLocation').value;
+    if (!box_barcode) return alert('Please enter or scan a barcode.');
+
+    const res = await fetch('/api/scan/warehouse-inward', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ box_barcode, warehouse_staff_id: 'STAFF-HUB-01', hub_name })
+    });
+    const data = await res.json();
+    const alertBox = document.getElementById('inwardAlert');
+
+    if (data.success) {
+      alertBox.innerHTML = `
+        <div class="alert alert-success" style="font-size:14px;">
+          📦 <strong>${data.box_barcode}</strong> Inward Complete.<br>
+          <span style="font-size:16px; font-weight:800; color:#1e3a8a;">👉 ${data.route_instruction}</span>
+        </div>`;
+      document.getElementById('inwardBarcode').value = '';
+    } else {
+      alertBox.innerHTML = `<div class="alert alert-error">❌ ${data.error}</div>`;
+    }
+  }
+</script>
+
+</body>
+</html>
