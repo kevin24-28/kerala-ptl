@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // ==========================================
-// UNIFIED PORTAL SPA WITH LIVE CAMERA SCANNER
+// UNIFIED PORTAL SPA WITH LIVE CAMERA SCANNER & SEQUENCE GUARDS
 // ==========================================
 const unifiedPortalHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -23,7 +23,6 @@ const unifiedPortalHtml = `<!DOCTYPE html>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- HTML5 QR/Barcode Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
@@ -105,8 +104,10 @@ const unifiedPortalHtml = `<!DOCTYPE html>
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
     .modal-card { background: white; max-width: 580px; width: 100%; border-radius: var(--radius); padding: 24px; max-height: 90vh; overflow-y: auto; }
-    .alert { padding: 10px; border-radius: 6px; font-size: 12px; margin-top: 10px; }
+    
+    .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-top: 12px; line-height: 1.5; }
     .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
     .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
     .sig-pad-box { border: 2px dashed var(--border); border-radius: 8px; background: #fafafa; margin: 10px 0; touch-action: none; }
@@ -150,7 +151,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       <div class="role-card" id="cardOps" onclick="selectRole('ops')">
         <div style="font-size:28px;">🚚</div>
         <strong style="font-size:15px;">Ground Operations Console</strong>
-        <p style="font-size:11px; color:#64748b; margin-top:4px;">Live camera scanner, driver allocation, 9-stage custody tracking & POD.</p>
+        <p style="font-size:11px; color:#64748b; margin-top:4px;">Sequence-guarded live scanner, driver allocation & POD signature capture.</p>
       </div>
 
       <div class="role-card" id="cardAdmin" onclick="selectRole('admin')">
@@ -442,7 +443,6 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     selectRole('merchant');
   }
 
-  // --- CAMERA BARCODE SCANNER LOGIC ---
   function toggleCameraScanner() {
     const readerDiv = document.getElementById('reader');
     if (readerDiv.style.display === 'block') {
@@ -480,7 +480,6 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     }
   }
 
-  // --- MERCHANT HANDLERS ---
   function switchMerchantTab(tab) {
     document.getElementById('mTabLogin').className = tab === 'login' ? 'auth-tab-btn active' : 'auth-tab-btn';
     document.getElementById('mTabReg').className = tab === 'reg' ? 'auth-tab-btn active' : 'auth-tab-btn';
@@ -645,7 +644,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
     }
   }
 
-  // --- OPS LOGIC ---
+  // --- OPS WORKFLOW LOGIC ---
   function verifyOpsPin() {
     if (document.getElementById('opsPinInput').value === '1234') {
       document.getElementById('roleSelectorSection').style.display = 'none';
@@ -712,7 +711,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       out.innerHTML = '<div class="alert alert-success">✅ ' + data.message + '</div>';
       loadOpsMasterFeed();
     } else {
-      out.innerHTML = '<div class="alert alert-error">❌ ' + data.error + '</div>';
+      out.innerHTML = '<div class="alert alert-warning">⚠️ ' + data.error + '</div>';
     }
   }
 
@@ -734,7 +733,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       document.getElementById('genericBarcode').value = '';
       loadOpsMasterFeed();
     } else {
-      out.innerHTML = '<div class="alert alert-error">❌ ' + data.error + '</div>';
+      out.innerHTML = \`<div class="alert alert-warning">⚠️ <strong>Sequence Alert:</strong> \${data.error}</div>\`;
     }
   }
 
@@ -803,7 +802,7 @@ const unifiedPortalHtml = `<!DOCTYPE html>
       out.innerHTML = '<div class="alert alert-success">🎉 ' + data.message + ' (Digital POD Verified)</div>';
       loadOpsMasterFeed();
     } else {
-      out.innerHTML = '<div class="alert alert-error">❌ ' + data.error + '</div>';
+      out.innerHTML = '<div class="alert alert-warning">⚠️ ' + data.error + '</div>';
     }
   }
 
@@ -956,8 +955,45 @@ const unifiedPortalHtml = `<!DOCTYPE html>
 app.get(['/', '/ops', '/admin'], (req, res) => res.send(unifiedPortalHtml));
 
 // ==========================================
-// BACKEND API ENDPOINTS
+// STRICT SEQUENCE GUARDS & APIS
 // ==========================================
+const MILESTONE_ORDER = [
+  'INDENT_CREATED',         // 0
+  'DISPATCHED_FOR_PICKUP',  // 1
+  'PICKED_UP',              // 2
+  'MOTHER_HUB_INWARD',      // 3
+  'STAGED_IN_BAY',          // 4
+  'LINEHAUL_TRANSIT',       // 5
+  'DEST_HUB_INWARD',        // 6
+  'DEST_BAY_STAGED',        // 7
+  'OUT_FOR_DELIVERY',       // 8
+  'DELIVERED'               // 9
+];
+
+const MILESTONE_STATUS_MAP = {
+  PICKUP: { status: 'PICKED_UP', text: 'First-Mile Pickup Complete (e-LR Issued)' },
+  MOTHER_HUB_INWARD: { status: 'MOTHER_HUB_INWARD', text: 'Arrived at Mother Hub (Kochi)' },
+  BAY_STAGED: { status: 'STAGED_IN_BAY', text: 'Sorted into Outbound Bay' },
+  LINEHAUL_OUTWARD: { status: 'LINEHAUL_TRANSIT', text: 'Loaded on Corridor Linehaul Express' },
+  DEST_HUB_INWARD: { status: 'DEST_HUB_INWARD', text: 'Arrived at Destination Terminal' },
+  DEST_BAY_STAGED: { status: 'DEST_BAY_STAGED', text: 'Staged in Local Delivery Bay' },
+  OUT_FOR_DELIVERY: { status: 'OUT_FOR_DELIVERY', text: 'Out for Final Mile Delivery' }
+};
+
+const MILESTONE_LABELS = {
+  'INDENT_CREATED': 'Stage 0 (Order Booked)',
+  'DISPATCHED_FOR_PICKUP': 'Stage 1 (Driver Assigned for Pickup)',
+  'PICKED_UP': 'Stage 2 (First-Mile Picked Up)',
+  'MOTHER_HUB_INWARD': 'Stage 3 (Mother Hub Inward Gate)',
+  'STAGED_IN_BAY': 'Stage 4 (Mother Hub Outbound Bay)',
+  'LINEHAUL_TRANSIT': 'Stage 5 (Linehaul Express Transit)',
+  'DEST_HUB_INWARD': 'Stage 6 (Destination Hub Inward)',
+  'DEST_BAY_STAGED': 'Stage 7 (Destination Delivery Bay)',
+  'OUT_FOR_DELIVERY': 'Stage 8 (Out for Delivery)',
+  'DELIVERED': 'Stage 9 (Delivered & POD Completed)'
+};
+
+// 1. PUBLIC TRACKING API
 app.get('/api/tracking/:docket_id', (req, res) => {
   try {
     const db = getDB();
@@ -980,6 +1016,7 @@ app.get('/api/tracking/:docket_id', (req, res) => {
   }
 });
 
+// 2. OPS STAGE 0: ASSIGN DRIVER (WITH GUARD)
 app.post('/api/ops/assign-dispatch', (req, res) => {
   try {
     const db = getDB();
@@ -988,7 +1025,19 @@ app.post('/api/ops/assign-dispatch', (req, res) => {
     if (docket_id.includes('-B')) docket_id = docket_id.split('-B')[0];
 
     const docket = db.getDocket(docket_id);
-    if (!docket) return res.status(404).json({ success: false, error: `Docket ${docket_id} not found in database.` });
+    if (!docket) return res.status(404).json({ success: false, error: `Docket ${docket_id} not found.` });
+
+    const currentIdx = MILESTONE_ORDER.indexOf(docket.status || 'INDENT_CREATED');
+    const targetIdx = MILESTONE_ORDER.indexOf('DISPATCHED_FOR_PICKUP');
+
+    // SEQUENCE GUARD
+    if (currentIdx > targetIdx) {
+      const currentName = MILESTONE_LABELS[docket.status] || docket.status;
+      return res.status(400).json({
+        success: false,
+        error: `This consignment is already at ${currentName}. You cannot re-assign driver at Step 0. Please check sequence.`
+      });
+    }
 
     docket.status = 'DISPATCHED_FOR_PICKUP';
     docket.assigned_vehicle = assigned_vehicle;
@@ -1010,17 +1059,7 @@ app.post('/api/ops/assign-dispatch', (req, res) => {
   }
 });
 
-const MILESTONE_STATUS_MAP = {
-  PICKUP: { status: 'PICKED_UP', text: 'First-Mile Pickup Complete (e-LR Issued)' },
-  MOTHER_HUB_INWARD: { status: 'MOTHER_HUB_INWARD', text: 'Arrived at Mother Hub (Kochi)' },
-  BAY_STAGED: { status: 'STAGED_IN_BAY', text: 'Sorted into Outbound Bay' },
-  LINEHAUL_OUTWARD: { status: 'LINEHAUL_TRANSIT', text: 'Loaded on Corridor Linehaul Express' },
-  DEST_HUB_INWARD: { status: 'DEST_HUB_INWARD', text: 'Arrived at Destination Terminal' },
-  DEST_BAY_STAGED: { status: 'DEST_BAY_STAGED', text: 'Staged in Local Delivery Bay' },
-  OUT_FOR_DELIVERY: { status: 'OUT_FOR_DELIVERY', text: 'Out for Final Mile Delivery' }
-};
-
-// Tolerant Scan Handler (Accepts Docket ID OR Box Barcode)
+// 3. TOLERANT MILESTONE SCANNER (WITH PREV-STAGE & DUPLICATE PROTECTION)
 app.post('/api/ops/milestone-scan', (req, res) => {
   try {
     const db = getDB();
@@ -1028,9 +1067,7 @@ app.post('/api/ops/milestone-scan', (req, res) => {
     box_barcode = (box_barcode || '').trim();
 
     let docket_id = box_barcode;
-    if (docket_id.includes('-B')) {
-      docket_id = docket_id.split('-B')[0];
-    }
+    if (docket_id.includes('-B')) docket_id = docket_id.split('-B')[0];
 
     let docket = db.getDocket(docket_id);
     if (!docket) {
@@ -1042,12 +1079,36 @@ app.post('/api/ops/milestone-scan', (req, res) => {
     }
 
     if (!docket) {
-      return res.status(404).json({ success: false, error: `Invalid Barcode or Docket ID (${box_barcode})` });
+      return res.status(404).json({ success: false, error: `Invalid Barcode or Docket ID (${box_barcode}). Not found in system.` });
     }
 
     const milestone = MILESTONE_STATUS_MAP[scan_type];
     if (!milestone) return res.status(400).json({ success: false, error: 'Invalid Scan Type' });
 
+    const currentStatus = docket.status || 'INDENT_CREATED';
+    const currentIdx = MILESTONE_ORDER.indexOf(currentStatus);
+    const targetIdx = MILESTONE_ORDER.indexOf(milestone.status);
+
+    // GUARD 1: RE-SCANNING AN EARLIER STAGE
+    if (targetIdx < currentIdx) {
+      const currentName = MILESTONE_LABELS[currentStatus] || currentStatus;
+      const targetName = MILESTONE_LABELS[milestone.status] || milestone.status;
+      return res.status(400).json({
+        success: false,
+        error: `Consignment is already at ${currentName}. It cannot be rescanned backwards at ${targetName}. Please check!`
+      });
+    }
+
+    // GUARD 2: DUPLICATE SCAN AT THE EXACT SAME STAGE
+    if (targetIdx === currentIdx) {
+      const currentName = MILESTONE_LABELS[currentStatus] || currentStatus;
+      return res.status(400).json({
+        success: false,
+        error: `Item already processed at ${currentName}. Duplicate scan ignored.`
+      });
+    }
+
+    // PROGRESS UPDATE
     docket.status = milestone.status;
     docket.current_milestone_text = milestone.text;
     docket.current_location = location;
@@ -1080,6 +1141,7 @@ app.post('/api/ops/milestone-scan', (req, res) => {
   }
 });
 
+// 4. DELIVERY POD (WITH GUARD)
 app.post('/api/scan/deliver', (req, res) => {
   try {
     const db = getDB();
@@ -1089,6 +1151,10 @@ app.post('/api/scan/deliver', (req, res) => {
 
     const docket = db.getDocket(docket_id);
     if (!docket) return res.status(404).json({ success: false, error: `Docket ${docket_id} not found.` });
+
+    if (docket.status === 'DELIVERED') {
+      return res.status(400).json({ success: false, error: `Consignment is already DELIVERED and POD is locked.` });
+    }
 
     db.setPod(docket_id, {
       docket_id,
@@ -1433,5 +1499,5 @@ app.get('/api/invoice/:docket_id', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 initDB().then(() => {
-  app.listen(PORT, () => console.log(`🚀 Corridor 9 Live Camera Engine on port ${PORT}`));
+  app.listen(PORT, () => console.log(`🚀 Corridor 9 Guarded Engine on port ${PORT}`));
 });
