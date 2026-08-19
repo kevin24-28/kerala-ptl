@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kerala Express PTL | Merchant Freight Portal</title>
+  <title>Corridor 9 | Scheduled PTL Logistics</title>
   <!-- Google Fonts & Lucide Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +29,7 @@
     body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; padding: 32px 16px; }
     .container { max-width: 960px; margin: 0 auto; }
 
-    /* Top Navbar / Brand */
+    /* Header */
     .header {
       display: flex;
       justify-content: space-between;
@@ -40,11 +40,11 @@
     }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
-      width: 44px; height: 44px; background: linear-gradient(135deg, #2563eb, #3b82f6);
+      width: 44px; height: 44px; background: linear-gradient(135deg, #0f172a, #2563eb);
       color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      font-weight: 800; font-size: 18px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     }
-    .brand-title { font-size: 20px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+    .brand-title { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
     .brand-tag { font-size: 12px; color: var(--text-muted); font-weight: 500; }
     .status-badge {
       display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
@@ -53,11 +53,10 @@
     .pulse-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    /* Grid Layout */
+    /* Layout */
     .main-grid { display: grid; grid-template-columns: 1.1fr 2fr; gap: 24px; }
     @media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; } }
 
-    /* Cards */
     .card {
       background: var(--card-bg); border-radius: var(--radius); padding: 24px;
       border: 1px solid var(--border); box-shadow: var(--shadow); position: relative;
@@ -67,15 +66,11 @@
       display: flex; align-items: center; gap: 8px;
     }
 
-    /* Wallet Card Special Styling */
+    /* Wallet Box */
     .wallet-balance-box {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: white; padding: 22px; border-radius: 12px; margin-bottom: 20px;
       position: relative; overflow: hidden; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
-    }
-    .wallet-balance-box::after {
-      content: ''; position: absolute; right: -20px; bottom: -20px; width: 100px; height: 100px;
-      background: radial-gradient(circle, rgba(37,99,235,0.25) 0%, rgba(255,255,255,0) 70%); border-radius: 50%;
     }
     .wallet-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; font-weight: 600; }
     .wallet-amount { font-size: 32px; font-weight: 800; margin: 6px 0 12px; color: #ffffff; }
@@ -84,7 +79,7 @@
       border-radius: 6px; display: inline-block; color: #cbd5e1; font-family: monospace;
     }
 
-    /* Forms */
+    /* Form Fields */
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -98,14 +93,19 @@
     .btn {
       width: 100%; padding: 13px 20px; border-radius: 8px; font-size: 14px; font-weight: 700;
       border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      gap: 8px; transition: all 0.2s ease;
+      gap: 8px; transition: all 0.2s ease; text-decoration: none;
     }
     .btn-primary { background: var(--brand); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
-    .btn-primary:hover { background: var(--brand-hover); transform: translateY(-1px); }
+    .btn-primary:hover { background: var(--brand-hover); }
     .btn-outline { background: transparent; color: #334155; border: 1.5px solid var(--border); }
     .btn-outline:hover { background: #f1f5f9; }
+    .btn-invoice {
+      background: #0f172a !important; color: white !important; padding: 10px 18px !important;
+      font-size: 13px !important; width: auto !important; border-radius: 8px !important;
+      display: inline-flex !important; align-items: center !important; gap: 8px !important;
+    }
 
-    /* Rate Estimation Box */
+    /* Live Rate Estimation */
     .rate-chip-box {
       background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;
       padding: 14px; margin: 18px 0; font-size: 13px; color: #475569;
@@ -113,12 +113,12 @@
     .rate-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
     .rate-row.total { font-weight: 700; color: var(--primary); font-size: 14px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 6px; }
 
-    /* Status Notifications */
-    .alert { padding: 14px; border-radius: 8px; font-size: 14px; margin-top: 16px; display: flex; align-items: center; gap: 10px; }
-    .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    /* Alerts */
+    .alert { padding: 16px; border-radius: 10px; font-size: 14px; margin-top: 16px; }
+    .alert-success { background: #ecfdf5; color: #065f46; border: 1.5px solid #a7f3d0; }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1.5px solid #fecaca; }
 
-    /* Printable Barcode Labels */
+    /* Barcode Labels */
     .labels-section { margin-top: 28px; }
     .labels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 14px; }
     .label-card {
@@ -137,19 +137,19 @@
   <!-- Brand Header -->
   <header class="header">
     <div class="brand">
-      <div class="brand-icon"><i data-lucide="truck"></i></div>
+      <div class="brand-icon">C9</div>
       <div>
-        <h1 class="brand-title">KERALA DIRECT EXPRESS</h1>
-        <div class="brand-tag">High-Frequency B2B PTL Linehaul Network</div>
+        <h1 class="brand-title">CORRIDOR 9</h1>
+        <div class="brand-tag">Express PTL Linehaul Logistics (NH-66 Direct)</div>
       </div>
     </div>
     <div class="status-badge">
-      <span class="pulse-dot"></span> NH-66 Corridor Live
+      <span class="pulse-dot"></span> Corridor Active
     </div>
   </header>
 
   <div class="main-grid">
-    <!-- LEFT: Merchant Wallet & Profile -->
+    <!-- LEFT: Merchant Wallet -->
     <div class="card">
       <div class="card-title"><i data-lucide="wallet"></i> Merchant Account</div>
       
@@ -164,7 +164,7 @@
         <input type="text" id="cust_id" value="CUST-ALUVA-01" />
       </div>
       <div class="form-group">
-        <label>Merchant Notification Email</label>
+        <label>Notification Email (For Invoices/e-LR)</label>
         <input type="email" id="cust_email" placeholder="merchant@business.com" value="merchant@gmail.com" />
       </div>
       <div class="form-group">
@@ -179,13 +179,13 @@
 
     <!-- RIGHT: Booking Indent Form -->
     <div class="card">
-      <div class="card-title"><i data-lucide="package-plus"></i> Create Shipment Indent</div>
+      <div class="card-title"><i data-lucide="package-plus"></i> Create Corridor 9 Indent</div>
 
       <div class="form-row">
         <div class="form-group">
           <label>Origin Terminal</label>
           <select id="origin">
-            <option value="Kochi">Kochi (Aluva Mother Hub)</option>
+            <option value="Kochi">Kochi (Aluva Central Hub)</option>
             <option value="Thrissur">Thrissur Hub</option>
             <option value="Kozhikode">Kozhikode Hub</option>
           </select>
@@ -238,11 +238,11 @@
     </div>
   </div>
 
-  <!-- LABELS OUTPUT -->
+  <!-- LABELS & INVOICE OUTPUT -->
   <div class="labels-section" id="labelsContainer" style="display:none;">
     <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="card-title" style="margin-bottom:0;"><i data-lucide="printer"></i> Ready-to-Print Thermal Carton Labels</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="card-title" style="margin-bottom:0;"><i data-lucide="printer"></i> Ready-to-Print Thermal Labels</div>
         <button class="btn btn-outline" style="width: auto; padding: 6px 14px; font-size: 12px;" onclick="window.print()">
           <i data-lucide="printer"></i> Print Labels
         </button>
@@ -286,11 +286,10 @@
     if (data.success) {
       document.getElementById('balanceDisplay').innerText = `₹${data.current_balance}`;
       document.getElementById('customerPill').innerText = customer_id;
-      alertBox.innerHTML = `<div class="alert alert-success"><i data-lucide="check"></i> Added ₹${amount}. New balance: ₹${data.current_balance}</div>`;
+      alertBox.innerHTML = `<div class="alert alert-success" style="margin-top:10px;">✅ Added ₹${amount}. Balance: <strong>₹${data.current_balance}</strong></div>`;
     } else {
-      alertBox.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+      alertBox.innerHTML = `<div class="alert alert-error" style="margin-top:10px;">${data.error}</div>`;
     }
-    lucide.createIcons();
   }
 
   async function createBooking() {
@@ -318,13 +317,17 @@
 
     if (data.success) {
       document.getElementById('balanceDisplay').innerText = `₹${data.remaining_balance}`;
+      
+      // TAX INVOICE BUTTON IN CONFIRMATION BANNER
       out.innerHTML = `
-        <div class="alert alert-success">
-          <i data-lucide="check-circle"></i>
+        <div class="alert alert-success" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 18px;">
           <div>
-            <strong>Docket #${data.docket_id} Confirmed!</strong><br>
-            Deducted ₹${data.deducted_amount} | Email receipt dispatched.
+            <strong style="font-size: 15px;">🎉 Indent #${data.docket_id} Confirmed!</strong><br>
+            <span style="font-size: 13px; color: #047857;">Deducted ₹${data.deducted_amount} | Balance: ₹${data.remaining_balance}</span>
           </div>
+          <a href="/api/invoice/${data.docket_id}" target="_blank" class="btn btn-invoice">
+            <i data-lucide="file-text"></i> Download Tax Invoice (PDF)
+          </a>
         </div>`;
       
       document.getElementById('labelsContainer').style.display = 'block';
@@ -332,7 +335,7 @@
         labelsGrid.innerHTML += `
           <div class="label-card">
             <div class="label-header">
-              <span>Express PTL</span>
+              <span>CORRIDOR 9 LOGISTICS</span>
               <span>Box ${b.box_number} of ${payload.total_boxes}</span>
             </div>
             <img class="label-barcode-img" src="${b.barcodeImage}" />
@@ -341,12 +344,11 @@
           </div>`;
       });
     } else {
-      out.innerHTML = `<div class="alert alert-error"><i data-lucide="alert-circle"></i> ${data.message || data.error}</div>`;
+      out.innerHTML = `<div class="alert alert-error" style="margin-top:18px;">❌ ${data.message || data.error}</div>`;
     }
     lucide.createIcons();
   }
 
-  // Initial calculation
   calculateLiveQuote();
 </script>
 
