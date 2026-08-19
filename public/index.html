@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kerala PTL - Logistics Hub</title>
+  <style>
+    :root { --primary: #0d47a1; --bg: #f0f2f5; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 16px; color: #333; }
+    .container { max-width: 900px; margin: auto; }
+    .nav { display: flex; gap: 10px; margin-bottom: 20px; }
+    .nav button { flex: 1; padding: 12px; background: white; border: 2px solid var(--primary); color: var(--primary); font-weight: bold; border-radius: 6px; cursor: pointer; }
+    .nav button.active { background: var(--primary); color: white; }
+    .card { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    h2 { margin-top: 0; color: var(--primary); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    input, select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    button.primary { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; margin-top: 10px; padding: 12px; }
+    .wallet-badge { background: #e8f5e9; border: 1px solid #4caf50; padding: 12px; border-radius: 6px; font-weight: bold; color: #2e7d32; margin-top: 12px; }
+    .labels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+    .label-card { border: 2px dashed #000; padding: 10px; text-align: center; background: #fff; border-radius: 4px; }
+    .label-card img { width: 100%; height: auto; }
+    .status-box { padding: 12px; border-radius: 4px; margin-top: 12px; }
+    .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="nav">
+    <button class="active" onclick="showTab('booking')">1. Customer Booking & Wallet</button>
+    <button onclick="showTab('scanner')">2. Operations / Driver Scanner</button>
+  </div>
+
+  <div id="tab-booking">
+    <div class="card">
+      <h2>💳 Merchant Wallet</h2>
+      <div class="form-grid">
+        <input type="text" id="cust_id" value="CUST-ALUVA-01" placeholder="Customer ID" />
+        <input type="number" id="topup_amt" placeholder="Top-up Amount (₹)" value="5000" />
+      </div>
+      <button class="primary" onclick="rechargeWallet()">Recharge / Verify Wallet</button>
+      <div id="walletBadge" class="wallet-badge" style="display:none;"></div>
+    </div>
+
+    <div class="card">
+      <h2>📦 Create Shipment Indent</h2>
+      <div class="form-grid">
+        <div>
+          <label>Origin Hub:</label>
+          <select id="origin">
+            <option value="Kochi">Kochi (Aluva Hub)</option>
+            <option value="Thrissur">Thrissur</option>
+            <option value="Kozhikode">Kozhikode</option>
+          </select>
+        </div>
+        <div>
+          <label>Destination Hub:</label>
+          <select id="destination">
+            <option value="Kozhikode">Kozhikode (Valiyangadi)</option>
+            <option value="Trivandrum">Trivandrum</option>
+            <option value="Thrissur">Thrissur</option>
+          </select>
+        </div>
+        <input type="text" id="consignee_name" placeholder="Consignee Business Name" value="Malabar Traders" />
+        <input type="text" id="consignee_phone" placeholder="Consignee Phone" value="9876543210" />
+        <input type="number" id="total_boxes" placeholder="Total Boxes" value="2" />
+        <input type="number" id="dead_weight" placeholder="Total Dead Weight (kg)" value="120" />
+      </div>
+      <button class="primary" onclick="createBooking()">Confirm & Auto-Deduct Wallet</button>
+      <div id="bookingResult"></div>
+      <div id="labelsOutput" class="labels-grid"></div>
+    </div>
+  </div>
+
+  <div id="tab-scanner" style="display:none;">
+    <div class="card">
+      <h2>📱 Ground Operations Scanner</h2>
+      <label>Scan Milestone:</label>
+      <select id="scanMode">
+        <option value="pickup">1. Driver First-Mile Pickup</option>
+        <option value="warehouse-inward">2. Central Hub Inward & Route Separation</option>
+        <option value="linehaul-outward">3. Load Outward Linehaul Truck</option>
+      </select>
+
+      <input type="text" id="barcodeInput" placeholder="Scan Barcode (e.g. IND-123456-B1)" style="margin-top:10px;" />
+      <input type="text" id="staffId" placeholder="Driver / Staff ID" value="STAFF-KOCHI-01" style="margin-top:10px;" />
+      
+      <button class="primary" onclick="submitScan()">Process Scan</button>
+      <div id="scanResult"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(tab) {
+  document.getElementById('tab-booking').style.display = tab === 'booking' ? 'block' : 'none';
+  document.getElementById('tab-scanner').style.display = tab === 'scanner' ? 'block' : 'none';
+  document.querySelectorAll('.nav button').forEach((b, i) => {
+    b.className = (i === 0 && tab === 'booking') || (i === 1 && tab === 'scanner') ? 'active' : '';
+  });
+}
+
+async function rechargeWallet() {
+  const customer_id = document.getElementById('cust_id').value;
+  const amount = document.getElementById('topup_amt').value;
+  
+  const res = await fetch('/api/wallet/topup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customer_id, name: 'Aluva Spices', phone: '9847000000', amount })
+  });
+  const data = await res.json();
+  const badge = document.getElementById('walletBadge');
+  badge.style.display = 'block';
+  badge.innerHTML = data.success ? `✅ Balance for ${customer_id}: <strong>₹${data.current_balance}</strong>` : `❌ ${data.error}`;
+}
+
+async function createBooking() {
+  const payload = {
+    customer_id: document.getElementById('cust_id').value,
+    consignee_name: document.getElementById('consignee_name').value,
+    consignee_phone: document.getElementById('consignee_phone').value,
+    consignee_address: 'Main Market Road',
+    origin: document.getElementById('origin').value,
+    destination: document.getElementById('destination').value,
+    total_boxes: document.getElementById('total_boxes').value,
+    dead_weight_kg: document.getElementById('dead_weight').value
+  };
+
+  const res = await fetch('/api/indents/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  const out = document.getElementById('bookingResult');
+  const labels = document.getElementById('labelsOutput');
+  labels.innerHTML = '';
+
+  if (data.success) {
+    out.innerHTML = `<div class="status-box success">🎉 <strong>Booked:</strong> ${data.docket_id} | Deducted: ₹${data.deducted_amount} | Balance: ₹${data.remaining_balance}</div>`;
+    data.boxes.forEach(b => {
+      labels.innerHTML += `
+        <div class="label-card">
+          <h4>${b.box_barcode}</h4>
+          <img src="${b.barcodeImage}" />
+          <p>${payload.origin} ➔ ${payload.destination}</p>
+        </div>`;
+    });
+  } else {
+    out.innerHTML = `<div class="status-box error">❌ <strong>Error:</strong> ${data.message || data.error}</div>`;
+  }
+}
+
+async function submitScan() {
+  const mode = document.getElementById('scanMode').value;
+  const barcode = document.getElementById('barcodeInput').value.trim();
+  const staffId = document.getElementById('staffId').value.trim();
+  const out = document.getElementById('scanResult');
+
+  let endpoint = '/api/scan/pickup';
+  let payload = { box_barcode: barcode, driver_id: staffId, location: 'Broadway, Kochi' };
+
+  if (mode === 'warehouse-inward') {
+    endpoint = '/api/scan/warehouse-inward';
+    payload = { box_barcode: barcode, warehouse_staff_id: staffId, hub_name: 'Aluva Mother Hub' };
+  } else if (mode === 'linehaul-outward') {
+    endpoint = '/api/scan/linehaul-outward';
+    payload = { box_barcode: barcode, truck_number: 'KL-07-CD-9988', destination_hub: 'Kozhikode' };
+  }
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    out.innerHTML = `<div class="status-box success">✅ ${data.message || data.route_instruction} ${data.all_boxes_picked ? `<br><strong>LR GENERATED: ${data.lr_number}</strong>` : ''}</div>`;
+  } else {
+    out.innerHTML = `<div class="status-box error">❌ ${data.error}</div>`;
+  }
+  document.getElementById('barcodeInput').value = '';
+}
+</script>
+
+</body>
+</html>
