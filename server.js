@@ -10,20 +10,36 @@ const { sendBookingEmail, sendLREmail, sendDeliveryEmail } = require('./emailSer
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
-// --- PAGE ROUTING ---
+// Helper function to locate files in public/ or root
+function getHtmlPath(filename) {
+  const inPublic = path.join(__dirname, 'public', filename);
+  if (fs.existsSync(inPublic)) return inPublic;
+  return path.join(__dirname, filename);
+}
+
+// --- DIRECT HTML ROUTES ---
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(getHtmlPath('index.html'));
 });
 
 app.get('/ops', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'ops.html'));
+  res.sendFile(getHtmlPath('ops.html'));
+});
+app.get('/ops.html', (req, res) => {
+  res.sendFile(getHtmlPath('ops.html'));
 });
 
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  res.sendFile(getHtmlPath('admin.html'));
 });
+app.get('/admin.html', (req, res) => {
+  res.sendFile(getHtmlPath('admin.html'));
+});
+
+// Serve static assets
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 // --- SUPER-ADMIN OVERVIEW API ---
 app.get('/api/admin/overview', (req, res) => {
