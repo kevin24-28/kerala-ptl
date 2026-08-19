@@ -3,188 +3,351 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kerala PTL - Logistics Hub</title>
+  <title>Kerala Express PTL | Merchant Freight Portal</title>
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <style>
-    :root { --primary: #0d47a1; --bg: #f0f2f5; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 16px; color: #333; }
-    .container { max-width: 900px; margin: auto; }
-    .nav { display: flex; gap: 10px; margin-bottom: 20px; }
-    .nav button { flex: 1; padding: 12px; background: white; border: 2px solid var(--primary); color: var(--primary); font-weight: bold; border-radius: 6px; cursor: pointer; }
-    .nav button.active { background: var(--primary); color: white; }
-    .card { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
-    h2 { margin-top: 0; color: var(--primary); }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    input, select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-    button.primary { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; margin-top: 10px; padding: 12px; }
-    .wallet-badge { background: #e8f5e9; border: 1px solid #4caf50; padding: 12px; border-radius: 6px; font-weight: bold; color: #2e7d32; margin-top: 12px; }
-    .labels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
-    .label-card { border: 2px dashed #000; padding: 10px; text-align: center; background: #fff; border-radius: 4px; }
-    .label-card img { width: 100%; height: auto; }
-    .status-box { padding: 12px; border-radius: 4px; margin-top: 12px; }
-    .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-    .error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+    :root {
+      --primary: #0f172a;
+      --brand: #2563eb;
+      --brand-hover: #1d4ed8;
+      --accent: #10b981;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 14px;
+      --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; padding: 32px 16px; }
+    .container { max-width: 960px; margin: 0 auto; }
+
+    /* Top Navbar / Brand */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 44px; height: 44px; background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .brand-title { font-size: 20px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+    .brand-tag { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+      color: #047857; background: #ecfdf5; padding: 6px 14px; border-radius: 999px; border: 1px solid #a7f3d0;
+    }
+    .pulse-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* Grid Layout */
+    .main-grid { display: grid; grid-template-columns: 1.1fr 2fr; gap: 24px; }
+    @media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; } }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg); border-radius: var(--radius); padding: 24px;
+      border: 1px solid var(--border); box-shadow: var(--shadow); position: relative;
+    }
+    .card-title {
+      font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* Wallet Card Special Styling */
+    .wallet-balance-box {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white; padding: 22px; border-radius: 12px; margin-bottom: 20px;
+      position: relative; overflow: hidden; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
+    }
+    .wallet-balance-box::after {
+      content: ''; position: absolute; right: -20px; bottom: -20px; width: 100px; height: 100px;
+      background: radial-gradient(circle, rgba(37,99,235,0.25) 0%, rgba(255,255,255,0) 70%); border-radius: 50%;
+    }
+    .wallet-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; font-weight: 600; }
+    .wallet-amount { font-size: 32px; font-weight: 800; margin: 6px 0 12px; color: #ffffff; }
+    .customer-pill {
+      font-size: 12px; background: rgba(255, 255, 255, 0.1); padding: 4px 10px;
+      border-radius: 6px; display: inline-block; color: #cbd5e1; font-family: monospace;
+    }
+
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    input, select {
+      width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 14px; color: var(--text-main); background: #ffffff; transition: all 0.2s ease;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+
+    /* Buttons */
+    .btn {
+      width: 100%; padding: 13px 20px; border-radius: 8px; font-size: 14px; font-weight: 700;
+      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 8px; transition: all 0.2s ease;
+    }
+    .btn-primary { background: var(--brand); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
+    .btn-primary:hover { background: var(--brand-hover); transform: translateY(-1px); }
+    .btn-outline { background: transparent; color: #334155; border: 1.5px solid var(--border); }
+    .btn-outline:hover { background: #f1f5f9; }
+
+    /* Rate Estimation Box */
+    .rate-chip-box {
+      background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px;
+      padding: 14px; margin: 18px 0; font-size: 13px; color: #475569;
+    }
+    .rate-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .rate-row.total { font-weight: 700; color: var(--primary); font-size: 14px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 6px; }
+
+    /* Status Notifications */
+    .alert { padding: 14px; border-radius: 8px; font-size: 14px; margin-top: 16px; display: flex; align-items: center; gap: 10px; }
+    .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* Printable Barcode Labels */
+    .labels-section { margin-top: 28px; }
+    .labels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 14px; }
+    .label-card {
+      background: white; border: 2px dashed #0f172a; border-radius: 8px; padding: 16px;
+      text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    }
+    .label-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
+    .label-barcode-img { width: 100%; height: 75px; object-fit: contain; margin: 8px 0; }
+    .label-route { font-size: 14px; font-weight: 800; color: var(--primary); }
+    .label-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="nav">
-    <button class="active" onclick="showTab('booking')">1. Customer Booking & Wallet</button>
-    <button onclick="showTab('scanner')">2. Operations / Driver Scanner</button>
-  </div>
-
-  <div id="tab-booking">
-    <div class="card">
-      <h2>💳 Merchant Wallet</h2>
-      <div class="form-grid">
-        <input type="text" id="cust_id" value="CUST-ALUVA-01" placeholder="Customer ID" />
-        <input type="number" id="topup_amt" placeholder="Top-up Amount (₹)" value="5000" />
+  <!-- Brand Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon"><i data-lucide="truck"></i></div>
+      <div>
+        <h1 class="brand-title">KERALA DIRECT EXPRESS</h1>
+        <div class="brand-tag">High-Frequency B2B PTL Linehaul Network</div>
       </div>
-      <button class="primary" onclick="rechargeWallet()">Recharge / Verify Wallet</button>
-      <div id="walletBadge" class="wallet-badge" style="display:none;"></div>
     </div>
-
-    <div class="card">
-      <h2>📦 Create Shipment Indent</h2>
-      <div class="form-grid">
-        <div>
-          <label>Origin Hub:</label>
-          <select id="origin">
-            <option value="Kochi">Kochi (Aluva Hub)</option>
-            <option value="Thrissur">Thrissur</option>
-            <option value="Kozhikode">Kozhikode</option>
-          </select>
-        </div>
-        <div>
-          <label>Destination Hub:</label>
-          <select id="destination">
-            <option value="Kozhikode">Kozhikode (Valiyangadi)</option>
-            <option value="Trivandrum">Trivandrum</option>
-            <option value="Thrissur">Thrissur</option>
-          </select>
-        </div>
-        <input type="text" id="consignee_name" placeholder="Consignee Business Name" value="Malabar Traders" />
-        <input type="text" id="consignee_phone" placeholder="Consignee Phone" value="9876543210" />
-        <input type="number" id="total_boxes" placeholder="Total Boxes" value="2" />
-        <input type="number" id="dead_weight" placeholder="Total Dead Weight (kg)" value="120" />
-      </div>
-      <button class="primary" onclick="createBooking()">Confirm & Auto-Deduct Wallet</button>
-      <div id="bookingResult"></div>
-      <div id="labelsOutput" class="labels-grid"></div>
+    <div class="status-badge">
+      <span class="pulse-dot"></span> NH-66 Corridor Live
     </div>
-  </div>
+  </header>
 
-  <div id="tab-scanner" style="display:none;">
+  <div class="main-grid">
+    <!-- LEFT: Merchant Wallet & Profile -->
     <div class="card">
-      <h2>📱 Ground Operations Scanner</h2>
-      <label>Scan Milestone:</label>
-      <select id="scanMode">
-        <option value="pickup">1. Driver First-Mile Pickup</option>
-        <option value="warehouse-inward">2. Central Hub Inward & Route Separation</option>
-        <option value="linehaul-outward">3. Load Outward Linehaul Truck</option>
-      </select>
-
-      <input type="text" id="barcodeInput" placeholder="Scan Barcode (e.g. IND-123456-B1)" style="margin-top:10px;" />
-      <input type="text" id="staffId" placeholder="Driver / Staff ID" value="STAFF-KOCHI-01" style="margin-top:10px;" />
+      <div class="card-title"><i data-lucide="wallet"></i> Merchant Account</div>
       
-      <button class="primary" onclick="submitScan()">Process Scan</button>
-      <div id="scanResult"></div>
+      <div class="wallet-balance-box">
+        <div class="wallet-label">Prepaid Balance</div>
+        <div class="wallet-amount" id="balanceDisplay">₹5,000</div>
+        <span class="customer-pill" id="customerPill">CUST-ALUVA-01</span>
+      </div>
+
+      <div class="form-group">
+        <label>Customer Account ID</label>
+        <input type="text" id="cust_id" value="CUST-ALUVA-01" />
+      </div>
+      <div class="form-group">
+        <label>Merchant Notification Email</label>
+        <input type="email" id="cust_email" placeholder="merchant@business.com" value="merchant@gmail.com" />
+      </div>
+      <div class="form-group">
+        <label>Quick Recharge Amount (₹)</label>
+        <input type="number" id="topup_amt" value="5000" step="500" />
+      </div>
+      <button class="btn btn-outline" onclick="rechargeWallet()">
+        <i data-lucide="plus-circle"></i> Add Funds / Verify
+      </button>
+      <div id="walletAlert"></div>
+    </div>
+
+    <!-- RIGHT: Booking Indent Form -->
+    <div class="card">
+      <div class="card-title"><i data-lucide="package-plus"></i> Create Shipment Indent</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Origin Terminal</label>
+          <select id="origin">
+            <option value="Kochi">Kochi (Aluva Mother Hub)</option>
+            <option value="Thrissur">Thrissur Hub</option>
+            <option value="Kozhikode">Kozhikode Hub</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Destination Terminal</label>
+          <select id="destination">
+            <option value="Kozhikode">Kozhikode (Valiyangadi Direct)</option>
+            <option value="Trivandrum">Trivandrum Hub</option>
+            <option value="Thrissur">Thrissur Hub</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Consignee Business Name</label>
+          <input type="text" id="consignee_name" value="Malabar Traders" />
+        </div>
+        <div class="form-group">
+          <label>Consignee Phone</label>
+          <input type="text" id="consignee_phone" value="9876543210" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Carton Count</label>
+          <input type="number" id="total_boxes" value="2" min="1" oninput="calculateLiveQuote()" />
+        </div>
+        <div class="form-group">
+          <label>Dead Weight (kg)</label>
+          <input type="number" id="dead_weight" value="120" min="1" oninput="calculateLiveQuote()" />
+        </div>
+      </div>
+
+      <!-- Live Rate Estimator -->
+      <div class="rate-chip-box">
+        <div class="rate-row"><span>Base Freight:</span> <span id="rateBase">₹660</span></div>
+        <div class="rate-row"><span>Docket Fee + Fuel Surcharge (10%):</span> <span id="rateSurcharges">₹186</span></div>
+        <div class="rate-row"><span>GST (5%):</span> <span id="rateGST">₹42</span></div>
+        <div class="rate-row total"><span>Total Freight:</span> <span id="rateGrandTotal" style="color:var(--brand);">₹888</span></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="createBooking()">
+        <i data-lucide="check-circle-2"></i> Confirm Booking & Print Labels
+      </button>
+
+      <div id="bookingResult"></div>
+    </div>
+  </div>
+
+  <!-- LABELS OUTPUT -->
+  <div class="labels-section" id="labelsContainer" style="display:none;">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-title" style="margin-bottom:0;"><i data-lucide="printer"></i> Ready-to-Print Thermal Carton Labels</div>
+        <button class="btn btn-outline" style="width: auto; padding: 6px 14px; font-size: 12px;" onclick="window.print()">
+          <i data-lucide="printer"></i> Print Labels
+        </button>
+      </div>
+      <div class="labels-grid" id="labelsOutput"></div>
     </div>
   </div>
 </div>
 
 <script>
-function showTab(tab) {
-  document.getElementById('tab-booking').style.display = tab === 'booking' ? 'block' : 'none';
-  document.getElementById('tab-scanner').style.display = tab === 'scanner' ? 'block' : 'none';
-  document.querySelectorAll('.nav button').forEach((b, i) => {
-    b.className = (i === 0 && tab === 'booking') || (i === 1 && tab === 'scanner') ? 'active' : '';
-  });
-}
+  lucide.createIcons();
 
-async function rechargeWallet() {
-  const customer_id = document.getElementById('cust_id').value;
-  const amount = document.getElementById('topup_amt').value;
-  
-  const res = await fetch('/api/wallet/topup', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ customer_id, name: 'Aluva Spices', phone: '9847000000', amount })
-  });
-  const data = await res.json();
-  const badge = document.getElementById('walletBadge');
-  badge.style.display = 'block';
-  badge.innerHTML = data.success ? `✅ Balance for ${customer_id}: <strong>₹${data.current_balance}</strong>` : `❌ ${data.error}`;
-}
+  function calculateLiveQuote() {
+    const deadWeight = Number(document.getElementById('dead_weight').value) || 0;
+    const base = Math.max(deadWeight * 5.5, 350);
+    const fsc = base * 0.10;
+    const docket = 120;
+    const subtotal = base + fsc + docket;
+    const gst = subtotal * 0.05;
+    const total = Math.round(subtotal + gst);
 
-async function createBooking() {
-  const payload = {
-    customer_id: document.getElementById('cust_id').value,
-    consignee_name: document.getElementById('consignee_name').value,
-    consignee_phone: document.getElementById('consignee_phone').value,
-    consignee_address: 'Main Market Road',
-    origin: document.getElementById('origin').value,
-    destination: document.getElementById('destination').value,
-    total_boxes: document.getElementById('total_boxes').value,
-    dead_weight_kg: document.getElementById('dead_weight').value
-  };
+    document.getElementById('rateBase').innerText = `₹${Math.round(base)}`;
+    document.getElementById('rateSurcharges').innerText = `₹${Math.round(fsc + docket)}`;
+    document.getElementById('rateGST').innerText = `₹${Math.round(gst)}`;
+    document.getElementById('rateGrandTotal').innerText = `₹${total}`;
+  }
 
-  const res = await fetch('/api/indents/create', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
-  const out = document.getElementById('bookingResult');
-  const labels = document.getElementById('labelsOutput');
-  labels.innerHTML = '';
-
-  if (data.success) {
-    out.innerHTML = `<div class="status-box success">🎉 <strong>Booked:</strong> ${data.docket_id} | Deducted: ₹${data.deducted_amount} | Balance: ₹${data.remaining_balance}</div>`;
-    data.boxes.forEach(b => {
-      labels.innerHTML += `
-        <div class="label-card">
-          <h4>${b.box_barcode}</h4>
-          <img src="${b.barcodeImage}" />
-          <p>${payload.origin} ➔ ${payload.destination}</p>
-        </div>`;
+  async function rechargeWallet() {
+    const customer_id = document.getElementById('cust_id').value;
+    const email = document.getElementById('cust_email').value;
+    const amount = document.getElementById('topup_amt').value;
+    
+    const res = await fetch('/api/wallet/topup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id, name: 'Aluva Merchant', phone: '9847000000', email, amount })
     });
-  } else {
-    out.innerHTML = `<div class="status-box error">❌ <strong>Error:</strong> ${data.message || data.error}</div>`;
-  }
-}
-
-async function submitScan() {
-  const mode = document.getElementById('scanMode').value;
-  const barcode = document.getElementById('barcodeInput').value.trim();
-  const staffId = document.getElementById('staffId').value.trim();
-  const out = document.getElementById('scanResult');
-
-  let endpoint = '/api/scan/pickup';
-  let payload = { box_barcode: barcode, driver_id: staffId, location: 'Broadway, Kochi' };
-
-  if (mode === 'warehouse-inward') {
-    endpoint = '/api/scan/warehouse-inward';
-    payload = { box_barcode: barcode, warehouse_staff_id: staffId, hub_name: 'Aluva Mother Hub' };
-  } else if (mode === 'linehaul-outward') {
-    endpoint = '/api/scan/linehaul-outward';
-    payload = { box_barcode: barcode, truck_number: 'KL-07-CD-9988', destination_hub: 'Kozhikode' };
+    const data = await res.json();
+    const alertBox = document.getElementById('walletAlert');
+    
+    if (data.success) {
+      document.getElementById('balanceDisplay').innerText = `₹${data.current_balance}`;
+      document.getElementById('customerPill').innerText = customer_id;
+      alertBox.innerHTML = `<div class="alert alert-success"><i data-lucide="check"></i> Added ₹${amount}. New balance: ₹${data.current_balance}</div>`;
+    } else {
+      alertBox.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+    }
+    lucide.createIcons();
   }
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
+  async function createBooking() {
+    const payload = {
+      customer_id: document.getElementById('cust_id').value,
+      customer_email: document.getElementById('cust_email').value,
+      consignee_name: document.getElementById('consignee_name').value,
+      consignee_phone: document.getElementById('consignee_phone').value,
+      consignee_address: 'Main Market Road',
+      origin: document.getElementById('origin').value,
+      destination: document.getElementById('destination').value,
+      total_boxes: document.getElementById('total_boxes').value,
+      dead_weight_kg: document.getElementById('dead_weight').value
+    };
 
-  if (data.success) {
-    out.innerHTML = `<div class="status-box success">✅ ${data.message || data.route_instruction} ${data.all_boxes_picked ? `<br><strong>LR GENERATED: ${data.lr_number}</strong>` : ''}</div>`;
-  } else {
-    out.innerHTML = `<div class="status-box error">❌ ${data.error}</div>`;
+    const res = await fetch('/api/indents/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    const out = document.getElementById('bookingResult');
+    const labelsGrid = document.getElementById('labelsOutput');
+    labelsGrid.innerHTML = '';
+
+    if (data.success) {
+      document.getElementById('balanceDisplay').innerText = `₹${data.remaining_balance}`;
+      out.innerHTML = `
+        <div class="alert alert-success">
+          <i data-lucide="check-circle"></i>
+          <div>
+            <strong>Docket #${data.docket_id} Confirmed!</strong><br>
+            Deducted ₹${data.deducted_amount} | Email receipt dispatched.
+          </div>
+        </div>`;
+      
+      document.getElementById('labelsContainer').style.display = 'block';
+      data.boxes.forEach(b => {
+        labelsGrid.innerHTML += `
+          <div class="label-card">
+            <div class="label-header">
+              <span>Express PTL</span>
+              <span>Box ${b.box_number} of ${payload.total_boxes}</span>
+            </div>
+            <img class="label-barcode-img" src="${b.barcodeImage}" />
+            <div class="label-route">${payload.origin} ➔ ${payload.destination}</div>
+            <div class="label-meta">${payload.consignee_name} | ${data.quote.chargeableWeight} kg</div>
+          </div>`;
+      });
+    } else {
+      out.innerHTML = `<div class="alert alert-error"><i data-lucide="alert-circle"></i> ${data.message || data.error}</div>`;
+    }
+    lucide.createIcons();
   }
-  document.getElementById('barcodeInput').value = '';
-}
+
+  // Initial calculation
+  calculateLiveQuote();
 </script>
 
 </body>
