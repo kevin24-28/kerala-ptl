@@ -10,36 +10,374 @@ const { sendBookingEmail, sendLREmail, sendDeliveryEmail } = require('./emailSer
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// Helper function to locate files in public/ or root
-function getHtmlPath(filename) {
-  const inPublic = path.join(__dirname, 'public', filename);
-  if (fs.existsSync(inPublic)) return inPublic;
-  return path.join(__dirname, filename);
-}
-
-// --- DIRECT HTML ROUTES ---
-app.get('/', (req, res) => {
-  res.sendFile(getHtmlPath('index.html'));
-});
-
-app.get('/ops', (req, res) => {
-  res.sendFile(getHtmlPath('ops.html'));
-});
-app.get('/ops.html', (req, res) => {
-  res.sendFile(getHtmlPath('ops.html'));
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(getHtmlPath('admin.html'));
-});
-app.get('/admin.html', (req, res) => {
-  res.sendFile(getHtmlPath('admin.html'));
-});
-
-// Serve static assets
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(__dirname));
+
+// ==========================================
+// 1. EMBEDDED HTML: OPERATIONS SCANNER (/ops)
+// ==========================================
+const opsHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corridor 9 | Ground Operations Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #0f172a; --brand: #2563eb; --bg: #f8fafc; --border: #e2e8f0; --radius: 12px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: var(--bg); color: var(--primary); min-height: 100vh; padding: 20px 14px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .card { background: white; border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
+    .card-title { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
+    input:focus, select:focus { outline: none; border-color: var(--brand); }
+    .btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; }
+    .btn-primary { background: var(--brand); color: white; }
+    .btn-dark { background: var(--primary); color: white; }
+    .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+    .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .tab-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .tab-btn { background: #e2e8f0; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; color: #475569; }
+    .tab-btn.active { background: var(--primary); color: white; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div>
+      <strong style="font-size: 18px;">CORRIDOR 9 OPS</strong>
+      <div style="font-size:11px; color:#64748b;">Ground Staff & Driver Scanner</div>
+    </div>
+    <span style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:6px; font-weight:bold;">PIN: 1234</span>
+  </header>
+
+  <div id="pinGate" class="card" style="margin-top: 40px;">
+    <div class="card-title">🔒 Ground Operations Access</div>
+    <div class="form-group">
+      <label>Staff Security PIN</label>
+      <input type="password" id="staffPin" placeholder="Enter PIN (1234)" autofocus />
+    </div>
+    <button class="btn btn-primary" onclick="checkPin()">Unlock Scanner Console</button>
+    <div id="pinAlert"></div>
+  </div>
+
+  <div id="opsConsole" style="display:none;">
+    <div class="tab-row">
+      <button id="tabPickupBtn" class="tab-btn active" onclick="switchOpsTab('pickup')">1. Driver Pickup</button>
+      <button id="tabInwardBtn" class="tab-btn" onclick="switchOpsTab('inward')">2. Hub Inward</button>
+    </div>
+
+    <div id="pickupSection" class="card">
+      <div class="card-title">🚚 First-Mile Box Pickup</div>
+      <div class="form-group">
+        <label>Driver ID / Vehicle</label>
+        <input type="text" id="driverId" value="DRV-ALUVA-01" />
+      </div>
+      <div class="form-group">
+        <label>Scan Box Barcode (e.g. C9-123456-B1)</label>
+        <input type="text" id="pickupBarcode" placeholder="Scan or paste barcode..." />
+      </div>
+      <button class="btn btn-primary" onclick="submitPickupScan()">Confirm Pickup Scan</button>
+      <div id="pickupAlert"></div>
+    </div>
+
+    <div id="inwardSection" class="card" style="display:none;">
+      <div class="card-title">🏢 Central Hub Inward Sorting</div>
+      <div class="form-group">
+        <label>Hub Location</label>
+        <select id="hubLocation">
+          <option value="Kochi Central Mother Hub">Kochi Central Mother Hub (Aluva)</option>
+          <option value="Thrissur Hub">Thrissur Hub</option>
+          <option value="Kozhikode Hub">Kozhikode Hub</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Scan Box Barcode</label>
+        <input type="text" id="inwardBarcode" placeholder="Scan barcode for bay route..." />
+      </div>
+      <button class="btn btn-dark" onclick="submitInwardScan()">Scan & Get Bay Location</button>
+      <div id="inwardAlert"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function checkPin() {
+    if (document.getElementById('staffPin').value === '1234') {
+      document.getElementById('pinGate').style.display = 'none';
+      document.getElementById('opsConsole').style.display = 'block';
+    } else {
+      document.getElementById('pinAlert').innerHTML = '<div class="alert alert-error">Invalid Staff PIN.</div>';
+    }
+  }
+
+  function switchOpsTab(tab) {
+    document.getElementById('tabPickupBtn').className = tab === 'pickup' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('tabInwardBtn').className = tab === 'inward' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('pickupSection').style.display = tab === 'pickup' ? 'block' : 'none';
+    document.getElementById('inwardSection').style.display = tab === 'inward' ? 'block' : 'none';
+  }
+
+  async function submitPickupScan() {
+    const box_barcode = document.getElementById('pickupBarcode').value.trim();
+    const driver_id = document.getElementById('driverId').value.trim();
+    if (!box_barcode) return alert('Please enter barcode.');
+
+    const res = await fetch('/api/scan/pickup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ box_barcode, driver_id, location: 'Merchant Doorstep' })
+    });
+    const data = await res.json();
+    const alertBox = document.getElementById('pickupAlert');
+    if (data.success) {
+      let lrMsg = data.all_boxes_picked ? '<br><strong>🎉 All Boxes Picked! Generated ' + data.lr_number + '</strong>' : '';
+      alertBox.innerHTML = '<div class="alert alert-success">✅ ' + data.message + lrMsg + '</div>';
+      document.getElementById('pickupBarcode').value = '';
+    } else {
+      alertBox.innerHTML = '<div class="alert alert-error">❌ ' + data.error + '</div>';
+    }
+  }
+
+  async function submitInwardScan() {
+    const box_barcode = document.getElementById('inwardBarcode').value.trim();
+    const hub_name = document.getElementById('hubLocation').value;
+    if (!box_barcode) return alert('Please enter barcode.');
+
+    const res = await fetch('/api/scan/warehouse-inward', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ box_barcode, warehouse_staff_id: 'STAFF-HUB-01', hub_name })
+    });
+    const data = await res.json();
+    const alertBox = document.getElementById('inwardAlert');
+    if (data.success) {
+      alertBox.innerHTML = '<div class="alert alert-success">📦 <strong>' + data.box_barcode + '</strong> Inward Complete.<br><span style="font-size:16px; font-weight:800; color:#1e3a8a;">👉 ' + data.route_instruction + '</span></div>';
+      document.getElementById('inwardBarcode').value = '';
+    } else {
+      alertBox.innerHTML = '<div class="alert alert-error">❌ ' + data.error + '</div>';
+    }
+  }
+</script>
+</body>
+</html>`;
+
+// ==========================================
+// 2. EMBEDDED HTML: MASTER ADMIN (/admin)
+// ==========================================
+const adminHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corridor 9 | Master Control Tower</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #0f172a; --brand: #2563eb; --accent: #10b981; --warning: #f59e0b; --bg: #f8fafc; --border: #e2e8f0; --radius: 12px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background-color: var(--bg); color: var(--primary); min-height: 100vh; padding: 24px 16px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .brand-title { font-size: 22px; font-weight: 800; }
+    .admin-pill { background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+    .pin-card { max-width: 400px; margin: 80px auto; background: white; padding: 32px; border-radius: var(--radius); border: 1px solid var(--border); }
+    input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; margin-top: 8px; }
+    .btn { width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; margin-top: 14px; }
+    .btn-primary { background: var(--brand); color: white; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: white; padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); }
+    .kpi-label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; }
+    .kpi-value { font-size: 26px; font-weight: 800; margin-top: 6px; }
+    .card { background: white; border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); margin-bottom: 24px; }
+    .card-title { font-size: 16px; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    th { background: #f8fafc; text-align: left; padding: 10px; color: #64748b; font-weight: 700; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
+    .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .st-created { background: #fef3c7; color: #92400e; }
+    .st-picked { background: #e0f2fe; color: #0369a1; }
+    .st-delivered { background: #dcfce7; color: #15803d; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div>
+      <h1 class="brand-title">CORRIDOR 9 <span class="admin-pill">MASTER CONTROL TOWER</span></h1>
+      <div style="font-size:12px; color:#64748b;">NH-66 Central Network Operations & Revenue Ledger</div>
+    </div>
+    <button id="adminLogoutBtn" class="btn" style="width:auto; margin:0; padding:6px 14px; background:#f1f5f9; color:#334155; display:none;" onclick="adminLogout()">Sign Out</button>
+  </header>
+
+  <div id="adminPinGate" class="pin-card">
+    <h2 style="font-size:18px; margin-bottom:6px;">🔒 Super-Admin Verification</h2>
+    <p style="font-size:13px; color:#64748b; margin-bottom:14px;">Enter the Master Administrator PIN:</p>
+    <input type="password" id="adminPinInput" placeholder="Enter PIN (Default: 9999)" autofocus />
+    <button class="btn btn-primary" onclick="verifyAdminPin()">Unlock Control Tower</button>
+    <div id="pinError" style="color:red; font-size:12px; margin-top:8px;"></div>
+  </div>
+
+  <div id="adminContent" style="display:none;">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Gross Freight Revenue</div>
+        <div class="kpi-value" id="kpiRevenue" style="color:var(--brand);">₹0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Consignments</div>
+        <div class="kpi-value" id="kpiTotalShipments">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Active In Transit</div>
+        <div class="kpi-value" id="kpiActiveShipments" style="color:var(--warning);">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Registered Merchants</div>
+        <div class="kpi-value" id="kpiMerchants" style="color:var(--accent);">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>📦 All Corridor Consignments</span>
+        <button class="btn btn-primary" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="loadAdminData()">🔄 Refresh</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="adminShipmentsTable">
+          <thead>
+            <tr>
+              <th>Docket #</th>
+              <th>Date</th>
+              <th>Shipper</th>
+              <th>Consignee</th>
+              <th>Route</th>
+              <th>Boxes/Wt</th>
+              <th>Freight</th>
+              <th>Status</th>
+              <th>Invoice</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>👥 Registered Merchants & Wallets</span></div>
+      <div style="overflow-x:auto;">
+        <table id="adminMerchantsTable">
+          <thead>
+            <tr>
+              <th>Customer ID</th>
+              <th>Company</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Wallet Balance</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function verifyAdminPin() {
+    if (document.getElementById('adminPinInput').value === "9999") {
+      document.getElementById('adminPinGate').style.display = 'none';
+      document.getElementById('adminContent').style.display = 'block';
+      document.getElementById('adminLogoutBtn').style.display = 'block';
+      loadAdminData();
+    } else {
+      document.getElementById('pinError').innerText = 'Invalid Admin Passcode.';
+    }
+  }
+
+  function adminLogout() {
+    document.getElementById('adminPinGate').style.display = 'block';
+    document.getElementById('adminContent').style.display = 'none';
+    document.getElementById('adminLogoutBtn').style.display = 'none';
+    document.getElementById('adminPinInput').value = '';
+  }
+
+  async function loadAdminData() {
+    const res = await fetch('/api/admin/overview');
+    const data = await res.json();
+    if (!data.success) return;
+
+    document.getElementById('kpiRevenue').innerText = '₹' + Number(data.summary.total_revenue).toLocaleString('en-IN');
+    document.getElementById('kpiTotalShipments').innerText = data.summary.total_shipments;
+    document.getElementById('kpiActiveShipments').innerText = data.summary.active_shipments;
+    document.getElementById('kpiMerchants').innerText = data.summary.total_merchants;
+
+    const sBody = document.querySelector('#adminShipmentsTable tbody');
+    sBody.innerHTML = data.dockets.length ? data.dockets.map(d => \`
+      <tr>
+        <td><strong>\${d.docket_id}</strong><br><small style="color:#64748b;">\${d.lr_number || ''}</small></td>
+        <td><small>\${new Date(d.created_at).toLocaleDateString()}</small></td>
+        <td><strong>\${d.company || d.customer_name}</strong></td>
+        <td>\${d.consignee_name}</td>
+        <td>\${d.origin} ➔ \${d.destination}</td>
+        <td>\${d.total_boxes} bxs (\${d.chargeable_weight_kg}kg)</td>
+        <td><strong style="color:var(--brand);">₹\${d.total_deducted}</strong></td>
+        <td><span class="status-badge \${d.status === 'DELIVERED' ? 'st-delivered' : d.status === 'PICKED_UP' ? 'st-picked' : 'st-created'}">\${d.status}</span></td>
+        <td><a href="/api/invoice/\${d.docket_id}" target="_blank" style="color:var(--brand); font-weight:700; text-decoration:none;">📄 PDF</a></td>
+      </tr>
+    \`).join('') : '<tr><td colspan="9" style="text-align:center; color:#94a3b8;">No consignments booked yet.</td></tr>';
+
+    const mBody = document.querySelector('#adminMerchantsTable tbody');
+    mBody.innerHTML = data.merchants.length ? data.merchants.map(m => \`
+      <tr>
+        <td><code>\${m.customer_id}</code></td>
+        <td><strong>\${m.company || m.name}</strong></td>
+        <td>\${m.name}</td>
+        <td>\${m.email}</td>
+        <td>\${m.phone}</td>
+        <td><strong style="color:var(--accent);">₹\${m.wallet_balance}</strong></td>
+        <td><button onclick="adminAdjustBalance('\${m.customer_id}')" style="padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer;">+ Add ₹</button></td>
+      </tr>
+    \`).join('') : '<tr><td colspan="7" style="text-align:center; color:#94a3b8;">No merchants registered yet.</td></tr>';
+  }
+
+  async function adminAdjustBalance(cid) {
+    const amt = prompt('Add amount in ₹ for ' + cid + ':', '5000');
+    if (!amt) return;
+    const res = await fetch('/api/wallet/topup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id: cid, amount: Number(amt) })
+    });
+    const d = await res.json();
+    if (d.success) { alert('Added ₹' + amt); loadAdminData(); }
+  }
+</script>
+</body>
+</html>`;
+
+// ==========================================
+// 3. DIRECT ROUTE HANDLERS
+// ==========================================
+app.get('/ops', (req, res) => res.send(opsHtml));
+app.get('/ops.html', (req, res) => res.send(opsHtml));
+
+app.get('/admin', (req, res) => res.send(adminHtml));
+app.get('/admin.html', (req, res) => res.send(adminHtml));
+
+app.get('/', (req, res) => {
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  }
+});
 
 // --- SUPER-ADMIN OVERVIEW API ---
 app.get('/api/admin/overview', (req, res) => {
@@ -49,10 +387,8 @@ app.get('/api/admin/overview', (req, res) => {
     if (fs.existsSync(dataStorePath)) {
       store = JSON.parse(fs.readFileSync(dataStorePath, 'utf8'));
     }
-    
     const allDockets = Object.values(store.dockets || {}).reverse();
     const allMerchants = Object.values(store.users || {});
-    
     let totalRevenue = 0;
     allDockets.forEach(d => { totalRevenue += Number(d.total_deducted || 0); });
 
@@ -412,15 +748,14 @@ app.get('/api/invoice/:docket_id', (req, res) => {
   const docket = db.getDocket(req.params.docket_id);
   if (!docket) return res.status(404).send('<h2>Invoice Not Found</h2>');
 
-  const invoiceHtml = `
-  <!DOCTYPE html>
+  const invoiceHtml = `<!DOCTYPE html>
   <html>
   <head>
     <title>Tax Invoice - ${docket.docket_id} | Corridor 9</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: auto; }
       .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 20px; }
-      .company-title { font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
+      .company-title { font-size: 26px; font-weight: 900; color: #0f172a; }
       .badge { font-size: 12px; background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
       .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 25px 0; font-size: 13px; line-height: 1.6; }
       table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
@@ -505,13 +840,8 @@ app.get('/api/invoice/:docket_id', (req, res) => {
         </tr>
       </table>
     </div>
-
-    <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 11px; color: #666;">
-      Issued under reverse charge mechanism / PTL freight carriage rules.
-    </div>
   </body>
-  </html>
-  `;
+  </html>`;
   res.send(invoiceHtml);
 });
 
