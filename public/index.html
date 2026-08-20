@@ -6,7 +6,7 @@
   <title>Corridor 9 Express | Next-Gen PTL Linehaul</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
@@ -41,7 +41,6 @@
 
     .container { max-width: 1220px; margin: 0 auto; }
 
-    /* Command Navigation Header */
     .header {
       display: flex;
       justify-content: space-between;
@@ -76,7 +75,6 @@
       color: var(--brand-dark);
     }
 
-    /* Modern Portal Selection Cards */
     .role-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -94,7 +92,6 @@
       cursor: pointer;
       box-shadow: var(--shadow-sm);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
     }
     
     .role-card:hover {
@@ -126,7 +123,6 @@
     }
     .auth-tab-btn.active { color: var(--brand-primary); background: var(--brand-light); }
 
-    /* Inputs & Form Controls */
     .form-group { margin-bottom: 14px; text-align: left; }
     .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--brand-dark); margin-bottom: 6px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -148,7 +144,6 @@
       box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.1);
     }
 
-    /* Classy Purple / White Buttons */
     .btn {
       width: 100%;
       padding: 13px;
@@ -174,17 +169,10 @@
       box-shadow: 0 6px 20px rgba(109, 40, 217, 0.35);
     }
     
-    .btn-dark {
-      background: var(--brand-dark);
-      color: #ffffff;
-    }
+    .btn-dark { background: var(--brand-dark); color: #ffffff; }
     .btn-dark:hover { background: #2e1065; }
     
-    .btn-outline {
-      background: transparent;
-      border: 1.5px solid var(--border-subtle);
-      color: var(--text-main);
-    }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border-subtle); color: var(--text-main); }
     .btn-outline:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
     
     .btn-camera {
@@ -206,7 +194,6 @@
       cursor: pointer;
     }
 
-    /* KPI Metrics Cards */
     .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .stat-card {
       background: #ffffff;
@@ -247,7 +234,6 @@
       color: var(--brand-dark);
     }
 
-    /* Professional Express Table */
     table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
     th {
       background: #faf8ff;
@@ -279,7 +265,6 @@
     .st-ofd { background: #fef9c3; color: #854d0e; }
     .st-delivered { background: #dcfce7; color: #15803d; }
 
-    /* Timeline Tracking Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
     .modal-card { background: #ffffff; max-width: 580px; width: 100%; border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; }
     
@@ -344,7 +329,7 @@
       <div class="role-card" id="cardOps" onclick="selectRole('ops')">
         <div style="font-size:32px; margin-bottom:8px;">🚚</div>
         <strong style="font-size:16px; color:var(--brand-dark);">Operations Console</strong>
-        <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Camera barcode scanner, sequence-locked custody milestones & digital signature POD.</p>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">Individual staff sign-in, wrong-truck alerts, barcode scanner & trip sheets.</p>
       </div>
 
       <div class="role-card" id="cardAdmin" onclick="selectRole('admin')">
@@ -376,12 +361,33 @@
       <div id="merchantAlert"></div>
     </div>
 
-    <!-- Ops PIN -->
+    <!-- Operations Staff Multi-User Login Form -->
     <div id="opsAuthBox" class="auth-box" style="display:none;">
-      <h3 style="font-size:16px; margin-bottom:6px; color:var(--brand-dark);">🚚 Ground Staff Access</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Enter Staff PIN to unlock the scanner workstation:</p>
-      <div class="form-group"><input type="password" id="opsPinInput" placeholder="Security PIN: 1234" autofocus /></div>
-      <button class="btn btn-dark" onclick="verifyOpsPin()">Unlock Workstation</button>
+      <h3 style="font-size:16px; margin-bottom:4px; color:var(--brand-dark);">🚚 Operations Staff Sign-In</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Select your role and enter Staff ID for scan audit trail:</p>
+      
+      <div class="form-group">
+        <label>Operational Duty / Role</label>
+        <select id="opsDutyRole">
+          <option value="First-Mile Pickup Driver">First-Mile Pickup Driver</option>
+          <option value="Mother Hub Inward Sorter">Mother Hub Inward Sorter</option>
+          <option value="Linehaul Loading Supervisor">Linehaul Loading Supervisor</option>
+          <option value="Destination Terminal Inward">Destination Terminal Inward</option>
+          <option value="Last-Mile Delivery Executive">Last-Mile Delivery Executive</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Staff ID / Name</label>
+        <input type="text" id="opsStaffIdInput" value="STAFF-ALUVA-01" required />
+      </div>
+
+      <div class="form-group">
+        <label>Facility Security PIN</label>
+        <input type="password" id="opsPinInput" placeholder="PIN: 1234" autofocus />
+      </div>
+
+      <button class="btn btn-dark" onclick="verifyOpsPin()">Authorize Workstation</button>
       <div id="opsAlert"></div>
     </div>
 
@@ -472,7 +478,10 @@
   <!-- 3. OPERATIONS SCANNER WORKSTATION -->
   <div id="opsDashboardSection" style="display:none;">
     <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><span>🔄 9-Stage Chain of Custody Workflow</span></div>
+      <div class="card-title">
+        <span>🔄 9-Stage Chain of Custody Workflow</span>
+        <span id="opsActiveStaffBadge" style="font-size:11px; background:var(--brand-light); color:var(--brand-primary); border:1px solid var(--brand-border); padding:4px 8px; border-radius:6px; font-weight:bold;">Staff: STAFF-01</span>
+      </div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px;">
         <button class="btn btn-dark" id="btnOpsStage0" onclick="setOpsWorkflowStage('assign')">0. Assign Driver</button>
         <button class="btn btn-outline" id="btnOpsStage1" onclick="setOpsWorkflowStage('pickup')">1. Pickup Scan</button>
@@ -499,12 +508,21 @@
         <button class="btn btn-primary" onclick="submitAssignDriver()">Dispatch Driver for Pickup</button>
       </div>
 
-      <!-- Generic Milestone Scanner with Camera -->
+      <!-- Generic Milestone Scanner with Camera & Destination Guard -->
       <div id="stagePanel_scan" style="display:none;">
         <button class="btn btn-camera" onclick="toggleCameraScanner()">📸 Open Camera Barcode Scanner</button>
         <div id="reader"></div>
 
-        <div class="form-row" style="margin-top:12px;">
+        <div id="linehaulTargetBox" style="display:none; background:#faf8ff; border:1px solid var(--brand-border); padding:12px; border-radius:8px; margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:bold; color:var(--brand-primary); text-transform:uppercase;">Truck Destination Terminal (Mismatch Protection)</label>
+          <select id="linehaulTruckDestination">
+            <option value="Kozhikode">Kozhikode Direct Linehaul</option>
+            <option value="Trivandrum">Trivandrum Direct Linehaul</option>
+            <option value="Thrissur">Thrissur Hub Linehaul</option>
+          </select>
+        </div>
+
+        <div class="form-row">
           <div class="form-group"><label>Box Barcode OR Docket ID</label><input type="text" id="genericBarcode" placeholder="Scan or enter C9-123456 or C9-123456-B1..." autofocus /></div>
           <div class="form-group"><label id="genericMetaLabel">Station / Staging Bay</label><input type="text" id="genericMetaInput" value="Aluva Mother Hub" /></div>
         </div>
@@ -529,6 +547,29 @@
       <div id="opsActionResult"></div>
     </div>
 
+    <!-- TRIP SHEET & HIGHWAY MANIFEST MODULE -->
+    <div class="card">
+      <div class="card-title">
+        <span>📋 Highway Linehaul Trip Manifest Generator</span>
+        <button class="btn btn-primary" style="width:auto; padding:6px 14px; font-size:12px;" onclick="openTripManifest()">📄 Generate Official Trip Sheet</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Linehaul Vehicle Plate</label><input type="text" id="mnfTruck" value="KL-07-CC-8899" /></div>
+        <div class="form-group"><label>Destination Corridor</label>
+          <select id="mnfDest">
+            <option value="Kozhikode">Kozhikode Terminal (Valiyangadi)</option>
+            <option value="Trivandrum">Trivandrum Terminal</option>
+            <option value="Thrissur">Thrissur Hub</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Linehaul Driver Name</label><input type="text" id="mnfDriver" value="Rajesh V. (DRV-04)" /></div>
+        <div class="form-group"><label>Container Seal Number</label><input type="text" id="mnfSeal" value="C9-SEAL-84920" /></div>
+      </div>
+    </div>
+
+    <!-- Live Corridor Board -->
     <div class="card">
       <div class="card-title">
         <span>📍 Live Corridor Custody Board</span>
@@ -601,6 +642,7 @@
 
 <script>
   let currentMerchant = JSON.parse(localStorage.getItem('c9_merchant_session') || 'null');
+  let currentOpsStaff = JSON.parse(localStorage.getItem('c9_ops_staff') || 'null');
   let currentOpsStage = 'assign';
   let html5QrcodeScanner = null;
 
@@ -608,6 +650,8 @@
     initCanvas();
     if (currentMerchant && currentMerchant.customer_id) {
       launchMerchantDashboard();
+    } else if (currentOpsStaff && currentOpsStaff.staff_id) {
+      launchOpsDashboard();
     } else {
       selectRole('merchant');
     }
@@ -625,7 +669,9 @@
 
   function logoutCurrentSession() {
     localStorage.removeItem('c9_merchant_session');
+    localStorage.removeItem('c9_ops_staff');
     currentMerchant = null;
+    currentOpsStaff = null;
     if (html5QrcodeScanner) stopCamera();
     document.getElementById('sessionHeaderActions').style.display = 'none';
     document.getElementById('merchantDashboardSection').style.display = 'none';
@@ -836,19 +882,30 @@
     }
   }
 
-  // --- OPS LOGIC ---
+  // --- OPS MULTI-USER AUTH & LOGIC ---
   function verifyOpsPin() {
-    if (document.getElementById('opsPinInput').value === '1234') {
-      document.getElementById('roleSelectorSection').style.display = 'none';
-      document.getElementById('opsDashboardSection').style.display = 'block';
-      document.getElementById('sessionHeaderActions').style.display = 'flex';
-      document.getElementById('sessionUserName').innerText = 'Ground Ops Staff';
-      document.getElementById('sessionBadge').innerText = 'OPERATIONS';
-      setOpsWorkflowStage('assign');
-      loadOpsMasterFeed();
+    const pin = document.getElementById('opsPinInput').value.trim();
+    const staff_id = document.getElementById('opsStaffIdInput').value.trim();
+    const duty_role = document.getElementById('opsDutyRole').value;
+
+    if (pin === '1234' && staff_id) {
+      currentOpsStaff = { staff_id, duty_role };
+      localStorage.setItem('c9_ops_staff', JSON.stringify(currentOpsStaff));
+      launchOpsDashboard();
     } else {
-      document.getElementById('opsAlert').innerHTML = '<div class="alert alert-error">Invalid Staff PIN.</div>';
+      document.getElementById('opsAlert').innerHTML = '<div class="alert alert-error">Invalid Staff PIN or missing Staff ID.</div>';
     }
+  }
+
+  function launchOpsDashboard() {
+    document.getElementById('roleSelectorSection').style.display = 'none';
+    document.getElementById('opsDashboardSection').style.display = 'block';
+    document.getElementById('sessionHeaderActions').style.display = 'flex';
+    document.getElementById('sessionUserName').innerText = currentOpsStaff.staff_id;
+    document.getElementById('sessionBadge').innerText = currentOpsStaff.duty_role.toUpperCase();
+    document.getElementById('opsActiveStaffBadge').innerText = `Staff: ${currentOpsStaff.staff_id} (${currentOpsStaff.duty_role})`;
+    setOpsWorkflowStage('assign');
+    loadOpsMasterFeed();
   }
 
   const STAGE_CONFIG = {
@@ -877,6 +934,7 @@
     document.getElementById('stagePanel_assign').style.display = cfg.type === 'assign' ? 'block' : 'none';
     document.getElementById('stagePanel_scan').style.display = cfg.type === 'scan' ? 'block' : 'none';
     document.getElementById('stagePanel_pod').style.display = cfg.type === 'pod' ? 'block' : 'none';
+    document.getElementById('linehaulTargetBox').style.display = stageKey === 'linehaul_out' ? 'block' : 'none';
     document.getElementById('opsActionResult').innerHTML = '';
 
     if (cfg.type === 'scan') {
@@ -895,7 +953,12 @@
     const res = await fetch('/api/ops/assign-dispatch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ docket_id, assigned_vehicle, assigned_driver })
+      body: JSON.stringify({ 
+        docket_id, 
+        assigned_vehicle, 
+        assigned_driver,
+        staff_id: currentOpsStaff ? currentOpsStaff.staff_id : 'DISPATCH_STAFF'
+      })
     });
     const data = await res.json();
     const out = document.getElementById('opsActionResult');
@@ -911,22 +974,38 @@
     const box_barcode = document.getElementById('genericBarcode').value.trim();
     const location = document.getElementById('genericMetaInput').value.trim();
     const cfg = STAGE_CONFIG[currentOpsStage];
+    const target_destination = currentOpsStage === 'linehaul_out' ? document.getElementById('linehaulTruckDestination').value : null;
+
     if (!box_barcode) return alert('Please scan or enter barcode.');
 
     const res = await fetch('/api/ops/milestone-scan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ box_barcode, scan_type: cfg.scan_type, location, scanned_by: 'STAFF-OPS-01' })
+      body: JSON.stringify({ 
+        box_barcode, 
+        scan_type: cfg.scan_type, 
+        location,
+        target_destination,
+        scanned_by: currentOpsStaff ? `${currentOpsStaff.staff_id} (${currentOpsStaff.duty_role})` : 'STAFF-OPS'
+      })
     });
     const data = await res.json();
     const out = document.getElementById('opsActionResult');
     if (data.success) {
-      out.innerHTML = `<div class="alert alert-success">📦 <strong>${box_barcode}</strong> ➔ ${data.milestone_text} (Status: ${data.current_status})</div>`;
+      out.innerHTML = `<div class="alert alert-success">📦 <strong>${box_barcode}</strong> ➔ ${data.milestone_text} (Bound for: ${data.destination})</div>`;
       document.getElementById('genericBarcode').value = '';
       loadOpsMasterFeed();
     } else {
-      out.innerHTML = `<div class="alert alert-warning">⚠️ <strong>Sequence Alert:</strong> ${data.error}</div>`;
+      out.innerHTML = `<div class="alert alert-warning">⚠️ ${data.error}</div>`;
     }
+  }
+
+  function openTripManifest() {
+    const truck_number = encodeURIComponent(document.getElementById('mnfTruck').value);
+    const destination = encodeURIComponent(document.getElementById('mnfDest').value);
+    const driver_name = encodeURIComponent(document.getElementById('mnfDriver').value);
+    const seal_number = encodeURIComponent(document.getElementById('mnfSeal').value);
+    window.open(`/api/manifest/trip-sheet?truck_number=${truck_number}&destination=${destination}&driver_name=${driver_name}&seal_number=${seal_number}`, '_blank');
   }
 
   async function loadOpsMasterFeed() {
@@ -986,7 +1065,13 @@
     const res = await fetch('/api/scan/deliver', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ docket_id, receiver_name, receiver_phone, signature_data })
+      body: JSON.stringify({ 
+        docket_id, 
+        receiver_name, 
+        receiver_phone, 
+        signature_data,
+        scanned_by: currentOpsStaff ? `${currentOpsStaff.staff_id} (${currentOpsStaff.duty_role})` : 'DELIVERY_EXEC'
+      })
     });
     const data = await res.json();
     const out = document.getElementById('opsActionResult');
@@ -1033,7 +1118,7 @@
       let cls = isDone ? (isActive ? 'timeline-step active done' : 'timeline-step done') : 'timeline-step';
       
       const logMatch = history.filter(h => h.status === m.key).pop();
-      const meta = logMatch ? (logMatch.location + ' • ' + new Date(logMatch.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : (isDone ? 'Completed' : 'Pending');
+      const meta = logMatch ? (`${logMatch.location} • ${new Date(logMatch.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${logMatch.scanned_by ? ' (By: ' + logMatch.scanned_by + ')' : ''}`) : (isDone ? 'Completed' : 'Pending');
 
       return `
         <div class="${cls}">
