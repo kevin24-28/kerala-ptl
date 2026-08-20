@@ -20,7 +20,7 @@ app.get(['/', '/ops', '/admin'], (req, res) => {
 });
 
 // ==========================================
-// STRICT SEQUENCE GUARDS & APIS
+// 1. STRICT SEQUENCE GUARDS & APIS
 // ==========================================
 const MILESTONE_ORDER = [
   'INDENT_CREATED',         // 0
@@ -58,7 +58,7 @@ const MILESTONE_LABELS = {
   'DELIVERED': 'Stage 9 (Delivered & POD Completed)'
 };
 
-// 1. PUBLIC TRACKING API
+// --- PUBLIC TRACKING API ---
 app.get('/api/tracking/:docket_id', (req, res) => {
   try {
     const db = getDB();
@@ -81,11 +81,11 @@ app.get('/api/tracking/:docket_id', (req, res) => {
   }
 });
 
-// 2. OPS STAGE 0: ASSIGN DRIVER (WITH GUARD)
+// --- OPS STAGE 0: ASSIGN DRIVER & VEHICLE ---
 app.post('/api/ops/assign-dispatch', (req, res) => {
   try {
     const db = getDB();
-    let { docket_id, assigned_vehicle, assigned_driver } = req.body;
+    let { docket_id, assigned_vehicle, assigned_driver, staff_id } = req.body;
     if (!docket_id) return res.status(400).json({ success: false, error: 'Docket ID required' });
     if (docket_id.includes('-B')) docket_id = docket_id.split('-B')[0];
 
@@ -114,6 +114,7 @@ app.post('/api/ops/assign-dispatch', (req, res) => {
       docket_id,
       status: 'DISPATCHED_FOR_PICKUP',
       location: `Driver Assigned (${assigned_driver} - ${assigned_vehicle})`,
+      scanned_by: staff_id || 'DISPATCH_OFFICER',
       timestamp: new Date().toISOString()
     });
 
@@ -123,11 +124,11 @@ app.post('/api/ops/assign-dispatch', (req, res) => {
   }
 });
 
-// 3. TOLERANT MILESTONE SCANNER (WITH GUARDS)
+// --- TOLERANT MILESTONE SCANNER (WITH DESTINATION MISMATCH GUARD) ---
 app.post('/api/ops/milestone-scan', (req, res) => {
   try {
     const db = getDB();
-    let { box_barcode, scan_type, location, scanned_by } = req.body;
+    let { box_barcode, scan_type, location, target_destination, scanned_by } = req.body;
     box_barcode = (box_barcode || '').trim();
 
     let docket_id = box_barcode;
@@ -144,6 +145,18 @@ app.post('/api/ops/milestone-scan', (req, res) => {
 
     if (!docket) {
       return res.status(404).json({ success: false, error: `Invalid Barcode or Docket ID (${box_barcode}). Not found in system.` });
+    }
+
+    // DESTINATION MISMATCH CHECK FOR LINEHAUL & BAY STAGING
+    if (target_destination && scan_type === 'LINEHAUL_OUTWARD') {
+      const expectedDest = (docket.destination || '').toLowerCase();
+      const selectedTruckDest = target_destination.toLowerCase();
+      if (!expectedDest.includes(selectedTruckDest) && !selectedTruckDest.includes(expectedDest)) {
+        return res.status(400).json({
+          success: false,
+          error: `🚨 DESTINATION MISMATCH: This carton is booked for "${docket.destination}", but you are loading truck bound for "${target_destination}"!`
+        });
+      }
     }
 
     const milestone = MILESTONE_STATUS_MAP[scan_type];
@@ -194,6 +207,7 @@ app.post('/api/ops/milestone-scan', (req, res) => {
       success: true,
       box_barcode,
       docket_id,
+      destination: docket.destination,
       current_status: milestone.status,
       milestone_text: milestone.text
     });
@@ -202,11 +216,11 @@ app.post('/api/ops/milestone-scan', (req, res) => {
   }
 });
 
-// 4. DELIVERY POD (WITH GUARD)
+// --- DELIVERY POD ---
 app.post('/api/scan/deliver', (req, res) => {
   try {
     const db = getDB();
-    let { docket_id, receiver_name, receiver_phone, signature_data } = req.body;
+    let { docket_id, receiver_name, receiver_phone, signature_data, scanned_by } = req.body;
     docket_id = (docket_id || '').trim();
     if (docket_id.includes('-B')) docket_id = docket_id.split('-B')[0];
 
@@ -235,12 +249,129 @@ app.post('/api/scan/deliver', (req, res) => {
       docket_id,
       status: 'DELIVERED',
       location: `Delivered to ${receiver_name} (${receiver_phone})`,
+      scanned_by: scanned_by || 'DELIVERY_EXEC',
       timestamp: new Date().toISOString()
     });
 
     res.json({ success: true, message: `Docket ${docket_id} delivered successfully.` });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==========================================
+// 2. LINEHAUL TRIP MANIFEST GENERATOR
+// ==========================================
+app.get('/api/manifest/trip-sheet', (req, res) => {
+  try {
+    const { truck_number, destination, driver_name, seal_number } = req.query;
+    const dataStorePath = path.join(__dirname, 'data_store.json');
+    let store = { dockets: {} };
+    if (fs.existsSync(dataStorePath)) store = JSON.parse(fs.readFileSync(dataStorePath, 'utf8'));
+
+    const allDockets = Object.values(store.dockets || {});
+    const manifestDockets = allDockets.filter(d => 
+      (d.status === 'LINEHAUL_TRANSIT' || d.status === 'STAGED_IN_BAY' || d.status === 'DEST_HUB_INWARD') &&
+      (!destination || (d.destination || '').toLowerCase().includes((destination || '').toLowerCase()))
+    );
+
+    let totalBoxes = 0;
+    let totalWeight = 0;
+    manifestDockets.forEach(d => {
+      totalBoxes += Number(d.total_boxes || 0);
+      totalWeight += Number(d.chargeable_weight_kg || d.dead_weight_kg || 0);
+    });
+
+    const manifestId = 'MNF-C9-' + Date.now().toString().slice(-6);
+
+    const manifestHtml = `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Linehaul Manifest - ${manifestId} | Corridor 9</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 30px; color: #1e0842; max-width: 900px; margin: auto; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #6d28d9; padding-bottom: 16px; margin-bottom: 20px; }
+        .title { font-size: 24px; font-weight: 800; color: #1e0842; }
+        .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; background: #faf8ff; border: 1px solid #ede9fe; padding: 14px; border-radius: 8px; font-size: 12px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #6d28d9; color: white; text-align: left; padding: 10px 8px; text-transform: uppercase; font-size: 11px; }
+        td { padding: 10px 8px; border-bottom: 1px solid #ede9fe; }
+        .totals { margin-top: 20px; display: flex; justify-content: space-between; font-weight: bold; background: #f5f3ff; padding: 12px; border-radius: 6px; border: 1px solid #ddd6fe; }
+        .signs { display: flex; justify-content: space-between; margin-top: 50px; font-size: 12px; }
+        .sign-box { border-top: 1px dashed #6d28d9; width: 220px; text-align: center; padding-top: 6px; }
+        .print-btn { background: #6d28d9; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
+        @media print { .print-btn { display: none; } body { padding: 0; } }
+      </style>
+    </head>
+    <body>
+      <button class="print-btn" onclick="window.print()">🖨️ Print Official Trip Manifest</button>
+      <div class="header">
+        <div>
+          <div class="title">CORRIDOR 9 EXPRESS LINEHAUL</div>
+          <div style="font-size:12px; color:#6b21a8; font-weight:bold;">NH-66 SCHEDULED CORRIDOR TRANSIT MANIFEST</div>
+          <div style="font-size:11px; color:#64748b;">Mother Hub: Kochi (Aluva) | 24/7 Ops Desk: +91 9847000000</div>
+        </div>
+        <div style="text-align:right;">
+          <h3 style="margin:0; color:#6d28d9;">TRIP MANIFEST</h3>
+          <div style="font-size:12px; font-weight:bold; margin-top:4px;"># ${manifestId}</div>
+          <div style="font-size:11px; color:#64748b;">Date: ${new Date().toLocaleDateString('en-IN')} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+      </div>
+
+      <div class="meta-grid">
+        <div><strong>Truck Number:</strong><br>${truck_number || 'KL-07-CC-8899'}</div>
+        <div><strong>Destination Terminal:</strong><br>${destination || 'Kozhikode Valiyangadi'}</div>
+        <div><strong>Driver In-Charge:</strong><br>${driver_name || 'Rajesh V. (DRV-04)'}</div>
+        <div><strong>Container Seal #:</strong><br>${seal_number || 'C9-SEAL-84920'}</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Docket ID</th>
+            <th>e-LR Number</th>
+            <th>Shipper</th>
+            <th>Consignee</th>
+            <th>Destination</th>
+            <th>Cartons</th>
+            <th>Weight (kg)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${manifestDockets.length ? manifestDockets.map((d, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td><strong>${d.docket_id}</strong></td>
+              <td>${d.lr_number || 'PENDING'}</td>
+              <td>${d.company || d.customer_name}</td>
+              <td>${d.consignee_name}</td>
+              <td>${d.destination}</td>
+              <td>${d.total_boxes}</td>
+              <td>${d.chargeable_weight_kg || d.dead_weight_kg} kg</td>
+            </tr>
+          `).join('') : '<tr><td colspan="8" style="text-align:center; padding:20px; color:#64748b;">No active consignments loaded for this destination route.</td></tr>'}
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <div>Total Consignments: ${manifestDockets.length}</div>
+        <div>Total Loaded Cartons: ${totalBoxes} Boxes</div>
+        <div>Total Manifested Weight: ${totalWeight} kg</div>
+      </div>
+
+      <div class="signs">
+        <div class="sign-box">Mother Hub Dispatch Supervisor</div>
+        <div class="sign-box">Linehaul Truck Driver</div>
+        <div class="sign-box">Destination Hub Inward Gate</div>
+      </div>
+    </body>
+    </html>`;
+
+    res.send(manifestHtml);
+  } catch (err) {
+    res.status(500).send('Error generating manifest: ' + err.message);
   }
 });
 
